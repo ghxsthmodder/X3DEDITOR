@@ -50,7 +50,7 @@ Biblioteca escolhida para facilitar a interoperabilidade com formatos de modelos
 
 ## Comunicação entre interface e backend
 
-A interface Java/Kotlin deverá chamar as funções nativas C++ por uma camada de integração apropriada à plataforma. Se a implementação for Android/JVM, JNI é uma opção natural, mas a estratégia definitiva e o contrato da API nativa ainda serão definidos.
+A interface Java/Kotlin chamará as funções nativas C++ por **JNI (Java Native Interface)**. Como o projeto será exclusivo para Android, não haverá necessidade de abstrair a integração para outras plataformas. O contrato da API JNI ainda será definido.
 
 Princípios:
 - Não executar operações pesadas na thread principal da interface.
@@ -68,12 +68,24 @@ Princípios:
 5. O Assimp é utilizado para importar/exportar formatos suportados.
 6. O backend retorna o resultado e eventuais mensagens de erro à interface.
 
+## Formato de dados interno
+
+O formato interno inicial será **JSON**. Ele será utilizado para representar a estrutura dos dados do projeto e do modelo durante a primeira fase.
+
+A arquitetura deverá permitir a evolução futura para um formato binário, caso JSON apresente limitações de desempenho, tamanho ou consumo de memória. Para facilitar essa transição:
+- versionar o formato e seus documentos;
+- separar a descrição estrutural dos dados de grande volume sempre que possível;
+- evitar dependência da interface em detalhes específicos da serialização;
+- definir regras de conversão/migração entre versões.
+
+A especificação dos campos e da organização dos dados será detalhada em [data-format.md](data-format.md).
+
 ## Decisões ainda pendentes
 
-- Plataforma-alvo e versão mínima.
-- Estratégia definitiva de integração Java/Kotlin ↔ C++.
+- Versão mínima do Android.
+- Contrato detalhado da API JNI.
 - Se Java, Kotlin ou ambos serão usados no código da interface.
 - Formatos de entrada e saída prioritários.
-- Modelo interno de dados de malhas, materiais e cenas.
+- Modelo detalhado de dados de malhas, materiais e cenas.
 - Política de preservação de atributos e materiais na exportação.
 - Tratamento de cancelamento e progresso de operações longas.
