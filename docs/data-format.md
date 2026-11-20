@@ -1,53 +1,53 @@
-# Formato binário interno (.bin)
+# Internal Binary Format (.bin)
 
-## Objetivo e escopo
+## Purpose and scope
 
-O X3D Editor utiliza um formato binário próprio para armazenar projetos. A versão inicial é **1** e a extensão é `.bin`. O formato prioriza leitura e escrita simples, baixo custo de memória e validação rigorosa.
+X3D Editor uses a custom binary format to store projects. The initial format version is **1**, and the file extension is `.bin`. The format prioritizes simple reading and writing, low memory overhead, and strict validation.
 
-A versão 1 não inclui compressão, criptografia, checksums, offsets globais, serialização genérica, múltiplos canais UV, submeshes ou múltiplos materiais por malha.
+Version 1 does not include compression, encryption, checksums, global offsets, generic serialization, multiple UV channels, submeshes, or multiple materials per mesh.
 
-## Convenções gerais
+## General conventions
 
-- Inteiros e floats são gravados em little-endian.
-- Floats usam IEEE 754 de 32 bits (`float32`).
-- Não existe padding ou alinhamento entre campos.
-- Strings são UTF-8 válido, precedidas pelo tamanho em bytes (`uint32`), sem terminador NUL.
-- Arrays são gravados sequencialmente, sem cabeçalho adicional além das contagens definidas em cada registro.
-- Coleções são indexadas a partir de zero, na ordem em que os registros aparecem.
-- Contagens e tamanhos devem ser validados antes de qualquer alocação ou acesso.
-- Valores `float32` NaN e infinitos são inválidos.
+- Integers and floats are written in little-endian order.
+- Floats use 32-bit IEEE 754 (`float32`).
+- There is no padding or alignment between fields.
+- Strings are valid UTF-8, preceded by their byte length (`uint32`), with no NUL terminator.
+- Arrays are written sequentially, without additional headers beyond the counts defined in each record.
+- Collections are zero-indexed, in the order records appear.
+- Counts and sizes must be validated before any allocation or access.
+- NaN and infinity `float32` values are invalid.
 
-Tipos utilizados: `uint16`, `uint32`, `int32` e `float32`, todos com exatamente os tamanhos indicados pelo nome.
+Types used: `uint16`, `uint32`, `int32`, and `float32`, each with exactly the size indicated by its name.
 
-## Cabeçalho
+## Header
 
-| Campo | Tipo | Descrição |
+| Field | Type | Description |
 |---|---|---|
-| `magic` | 4 bytes | Bytes ASCII `X3D` seguidos de NUL |
-| `version` | `uint16` | Versão do formato; valor inicial `1` |
-| `sectionCount` | `uint16` | Número total de seções presentes |
+| `magic` | 4 bytes | ASCII bytes `X3D` followed by NUL |
+| `version` | `uint16` | Format version; initial value `1` |
+| `sectionCount` | `uint16` | Total number of sections present |
 
-A versão do formato é independente da versão do projeto armazenada em `META`. Um leitor da versão 1 rejeita versões de formato que não suporta.
+The format version is independent of the project version stored in `META`. A version 1 reader rejects format versions it does not support.
 
-## Seções
+## Sections
 
-Cada seção tem este cabeçalho:
+Each section has this header:
 
-| Campo | Tipo | Descrição |
+| Field | Type | Description |
 |---|---|---|
-| `tag` | 4 bytes | Identificador ASCII |
-| `size` | `uint32` | Tamanho do payload em bytes |
-| `payload` | `size` bytes | Dados da seção |
+| `tag` | 4 bytes | ASCII identifier |
+| `size` | `uint32` | Payload size in bytes |
+| `payload` | `size` bytes | Section data |
 
-As cinco seções conhecidas da versão 1 são `META`, `NODE`, `MESH`, `MATL` e `TEXR`. Cada uma deve aparecer exatamente uma vez. Portanto, um arquivo de versão 1 válido contém pelo menos essas cinco seções. Seções adicionais desconhecidas podem ser ignoradas usando `size`; elas contam em `sectionCount`.
+The five known sections in version 1 are `META`, `NODE`, `MESH`, `MATL`, and `TEXR`. Each must appear exactly once. Therefore, a valid version 1 file contains at least these five sections. Additional unknown sections may be skipped using `size`; they count toward `sectionCount`.
 
-Seções conhecidas ausentes ou duplicadas, payloads truncados, tags inválidas ou dados que ultrapassem os limites do arquivo causam rejeição do arquivo. O leitor deve consumir exatamente `size` bytes de cada payload.
+Missing or duplicated known sections, truncated payloads, invalid tags, or data exceeding file boundaries cause the file to be rejected. The reader must consume exactly `size` bytes for each payload.
 
-## META — metadados do projeto
+## META — project metadata
 
-A seção contém um único registro, sem contador adicional.
+The section contains a single record, with no additional count.
 
-Representação C++:
+C++ representation:
 
 ```cpp
 struct Metadata {
@@ -60,9 +60,9 @@ struct Metadata {
 };
 ```
 
-Payload, nesta ordem:
+Payload, in this order:
 
-| Ordem | Campo | Tipo |
+| Order | Field | Type |
 |---:|---|---|
 | 1 | `name` | String |
 | 2 | `description` | String |
@@ -70,11 +70,11 @@ Payload, nesta ordem:
 | 4 | `versionMinor` | `uint32` |
 | 5 | `versionPatch` | `uint32` |
 
-Não existe campo de autor. A versão major.minor.patch pertence ao projeto, não ao formato binário.
+There is no author field. The major.minor.patch version belongs to the project, not the binary format.
 
-## NODE — nós e hierarquia
+## NODE — nodes and hierarchy
 
-O payload começa com `nodeCount` (`uint32`), seguido pelos nós na ordem da coleção.
+The payload begins with `nodeCount` (`uint32`), followed by nodes in collection order.
 
 ```cpp
 struct Node {
@@ -88,9 +88,9 @@ struct Node {
 };
 ```
 
-Cada registro:
+Each record:
 
-| Ordem | Campo | Tipo |
+| Order | Field | Type |
 |---:|---|---|
 | 1 | `name` | String |
 | 2 | `parentIndex` | `int32` |
@@ -100,13 +100,13 @@ Cada registro:
 | 6 | `rotation` | 4 × `float32` (quaternion XYZW) |
 | 7 | `scale` | 3 × `float32` (XYZ) |
 
-`parentIndex = -1` indica raiz; valores não negativos referenciam a coleção de nós. `meshIndices` referencia a coleção de malhas. Transformações são locais, relativas ao pai. Um nó pode conter zero ou várias malhas.
+`parentIndex = -1` indicates a root node; non-negative values reference the node collection. `meshIndices` references the mesh collection. Transforms are local, relative to the parent. A node may contain zero or multiple meshes.
 
-O leitor rejeita referências inválidas, auto-referências e ciclos na hierarquia. O quaternion deve ter componentes finitos e comprimento diferente de zero.
+The reader rejects invalid references, self-references, and hierarchy cycles. The quaternion must have finite components and a non-zero length.
 
-## MESH — geometria
+## MESH — geometry
 
-O payload começa com `meshCount` (`uint32`).
+The payload begins with `meshCount` (`uint32`).
 
 ```cpp
 struct Mesh {
@@ -119,9 +119,9 @@ struct Mesh {
 };
 ```
 
-Cada registro:
+Each record:
 
-| Ordem | Campo | Tipo |
+| Order | Field | Type |
 |---:|---|---|
 | 1 | `name` | String |
 | 2 | `vertexCount` | `uint32` |
@@ -129,21 +129,21 @@ Cada registro:
 | 4 | `materialIndex` | `int32` |
 | 5 | `attributeFlags` | `uint32` |
 | 6 | `positions` | `vertexCount × 3 × float32` |
-| 7 | `normals` | `vertexCount × 3 × float32`, se bit 0 ativo |
-| 8 | `uvs` | `vertexCount × 2 × float32`, se bit 1 ativo |
+| 7 | `normals` | `vertexCount × 3 × float32`, if bit 0 is set |
+| 8 | `uvs` | `vertexCount × 2 × float32`, if bit 1 is set |
 | 9 | `indices` | `indexCount × uint32` |
 
-Flags da versão 1: bit 0 (`0x1`) indica normais; bit 1 (`0x2`) indica UV0. Todos os demais bits devem ser zero. Posições são obrigatórias; normais e UV0 são opcionais. A versão 1 possui apenas um canal UV.
+Version 1 flags: bit 0 (`0x1`) indicates normals; bit 1 (`0x2`) indicates UV0. All other bits must be zero. Positions are required; normals and UV0 are optional. Version 1 has only one UV channel.
 
-A geometria utiliza triângulos. `indexCount` deve ser múltiplo de três; cada índice deve ser menor que `vertexCount`. `vertexCount` deve ser maior que zero. `indexCount = 0` é permitido para uma malha sem faces. A geometria importada pelo Assimp deve ser triangulada antes de ser armazenada.
+Geometry uses triangles. `indexCount` must be divisible by three; every index must be less than `vertexCount`. `vertexCount` must be greater than zero. `indexCount = 0` is allowed for a mesh without faces. Geometry imported through Assimp must be triangulated before it is stored.
 
-`materialIndex = -1` significa ausência de material; caso contrário, referencia `MATL`. Cada malha possui no máximo um material. Submeshes e múltiplos materiais por malha não fazem parte da versão 1.
+`materialIndex = -1` means no material; otherwise it references `MATL`. Each mesh has at most one material. Submeshes and multiple materials per mesh are not part of version 1.
 
-Os arrays são contíguos. A saída de xatlas pode alterar a correspondência de vértices e deve ser aplicada de forma consistente a posições, índices e UVs.
+Arrays are contiguous. xatlas output may change vertex correspondence and must be applied consistently to positions, indices, and UVs.
 
-## MATL — materiais
+## MATL — materials
 
-O payload começa com `materialCount` (`uint32`).
+The payload begins with `materialCount` (`uint32`).
 
 ```cpp
 struct Material {
@@ -163,9 +163,9 @@ struct Material {
 };
 ```
 
-Cada registro:
+Each record:
 
-| Ordem | Campo | Tipo |
+| Order | Field | Type |
 |---:|---|---|
 | 1 | `name` | String |
 | 2 | `albedo` | 4 × `float32` (RGBA) |
@@ -173,13 +173,13 @@ Cada registro:
 | 4 | `roughness` | `float32` |
 | 5 | `opacity` | `float32` |
 | 6 | `emissive` | 3 × `float32` (RGB) |
-| 7–12 | Referências de textura | 6 × `int32`, na ordem dos campos da estrutura |
+| 7–12 | Texture references | 6 × `int32`, in the structure field order |
 
-Os fatores metallic, roughness e opacity devem estar entre 0 e 1. Valores padrão de um material novo: albedo (1,1,1,1), metallic 0, roughness 1, opacity 1 e emissive (0,0,0). Cada índice de textura referencia `TEXR`; `-1` significa ausência. Metallic e roughness usam referências independentes. Fatores e texturas permanecem separados; sua combinação é responsabilidade do sistema de materiais/renderização.
+The metallic, roughness, and opacity factors must be between 0 and 1. Defaults for a new material: albedo (1,1,1,1), metallic 0, roughness 1, opacity 1, and emissive (0,0,0). Each texture index references `TEXR`; `-1` means none. Metallic and roughness use independent references. Factors and textures remain separate; combining them is the responsibility of the material/rendering system.
 
-## TEXR — referências de textura
+## TEXR — texture references
 
-O payload começa com `textureCount` (`uint32`).
+The payload begins with `textureCount` (`uint32`).
 
 ```cpp
 struct Texture {
@@ -188,53 +188,53 @@ struct Texture {
 };
 ```
 
-Cada registro contém `name` (String) e `path` (String), nesta ordem. O caminho é relativo à pasta do projeto, em UTF-8. Caminhos absolutos não são aceitos. Os pixels permanecem em arquivos externos e não são incorporados ao `.bin`.
+Each record contains `name` (String) and `path` (String), in that order. The path is relative to the project folder and encoded in UTF-8. Absolute paths are not accepted. Pixel data remains in external files and is not embedded in the `.bin`.
 
-O caminho deve ser normalizado e validado para impedir que a resolução saia da pasta do projeto, inclusive por segmentos `..` ou links simbólicos.
+The path must be normalized and validated to prevent resolution outside the project folder, including through `..` segments or symbolic links.
 
-## Regras comuns de validação
+## Common validation rules
 
-- As cinco seções conhecidas são obrigatórias e aparecem exatamente uma vez.
-- Seções desconhecidas podem ser ignoradas com segurança usando o tamanho declarado.
-- Coleções são indexadas a partir de zero, na ordem dos registros.
-- Coleções sem registros usam contador zero; `META` sempre contém um registro.
-- O leitor valida tamanhos, contagens e operações aritméticas antes de alocar memória.
-- O leitor valida `parentIndex`, `meshIndices`, `materialIndex` e todas as referências de textura.
-- Todos os floats devem ser finitos.
-- O leitor deve terminar exatamente no fim de cada payload e no fim do arquivo.
-- Inteiros com sinal são interpretados em complemento de dois.
-- A versão 1 não contém compressão, criptografia, checksums, offsets globais ou padding.
+- All five known sections are required and must appear exactly once.
+- Unknown sections may be safely skipped using their declared size.
+- Collections are zero-indexed, in record order.
+- Empty collections use a count of zero; `META` always contains one record.
+- The reader validates sizes, counts, and arithmetic operations before allocating memory.
+- The reader validates `parentIndex`, `meshIndices`, `materialIndex`, and all texture references.
+- All floats must be finite.
+- The reader must finish exactly at the end of each payload and at the end of the file.
+- Signed integers are interpreted using two's complement.
+- Version 1 contains no compression, encryption, checksums, global offsets, or padding.
 
-## Gravação segura
+## Safe writing
 
-A gravação deve preservar o arquivo válido anterior até que o novo arquivo esteja completamente escrito.
+Writing must preserve the previous valid file until the new file has been completely written.
 
-1. Criar um arquivo temporário exclusivo no mesmo diretório do arquivo de projeto, usando um nome temporário único.
-2. Serializar o arquivo inteiro no temporário; verificar erros de escrita e garantir que todos os bytes foram enviados.
-3. Executar flush e sincronizar os dados do arquivo temporário em armazenamento persistente (`fsync` no Android/POSIX).
-4. Fechar o temporário. Se qualquer etapa falhar, remover o temporário quando possível e manter o arquivo original intacto.
-5. Substituir o destino por meio de rename atômico no mesmo sistema de arquivos.
-6. Sincronizar o diretório pai quando suportado, para persistir a alteração de nome.
+1. Create a unique temporary file in the same directory as the project file.
+2. Serialize the entire file to the temporary file; check write errors and ensure all bytes were written.
+3. Flush and synchronize the temporary file data to persistent storage (`fsync` on Android/POSIX).
+4. Close the temporary file. If any step fails, remove the temporary file when possible and keep the original file intact.
+5. Replace the destination using an atomic rename on the same filesystem.
+6. Synchronize the parent directory when supported, to persist the rename.
 
-O temporário deve estar no mesmo diretório para que a substituição possa ser atômica. Nunca truncar o arquivo de destino antes de a gravação temporária terminar. Se o rename falhar, o arquivo anterior permanece e a operação retorna erro. A implementação deve tratar resíduos temporários de execuções interrompidas sem confundi-los com projetos válidos.
+The temporary file must be in the same directory so replacement can be atomic. Never truncate the destination before the temporary write is complete. If rename fails, the previous file remains and the operation returns an error. The implementation must handle temporary files left by interrupted executions without confusing them with valid projects.
 
-## Exemplo de referência e testes
+## Reference example and tests
 
-O arquivo `tests/fixtures/v1-minimal.hex` contém uma fixture hexadecimal byte a byte de um projeto mínimo válido da versão 1. Ele pode ser convertido em binário para servir como entrada de teste. Os casos de aceitação, rejeição, round-trip e gravação segura estão descritos em `docs/format-v1-validation.md`.
+The file `tests/fixtures/v1-minimal.hex` contains a byte-for-byte hexadecimal fixture of a valid minimal version 1 project. It can be converted to binary for use as a test input. Acceptance, rejection, round-trip, and safe-write cases are described in `docs/format-v1-validation.md`.
 
-## Integração com bibliotecas
+## Library integration
 
-- **Assimp:** importa formatos externos para a representação interna e exporta a cena para formatos suportados.
-- **xatlas:** recebe posições e índices para gerar UVs; sua saída deve ser aplicada de forma consistente à geometria da malha.
+- **Assimp:** imports external formats into the internal representation and exports scenes to supported formats.
+- **xatlas:** receives positions and indices to generate UVs; its output must be applied consistently to the mesh geometry.
 
-O formato `.bin` é interno ao projeto e não substitui os formatos de intercâmbio atendidos pelo Assimp.
+The `.bin` format is internal to the project and does not replace the interchange formats supported by Assimp.
 
-## Estado da especificação
+## Specification status
 
-- [x] Revisão técnica da especificação da versão 1 e consolidação das regras.
-- [x] Layouts binários de `META`, `NODE`, `MESH`, `MATL` e `TEXR`.
-- [x] Definir UV0 como único canal e excluir submeshes da versão 1.
-- [x] Exemplo binário mínimo em fixture hexadecimal.
-- [x] Matriz de testes de leitura, escrita, validação e gravação segura documentada.
-- [x] Estratégia de gravação segura por temporário, sincronização e rename atômico.
-- [ ] Implementar o leitor, gravador e executar a suíte automatizada em C++ junto ao backend.
+- [x] Technical review and consolidation of version 1 rules.
+- [x] Binary layouts for `META`, `NODE`, `MESH`, `MATL`, and `TEXR`.
+- [x] Define UV0 as the only channel and exclude submeshes from version 1.
+- [x] Minimal binary example in a hexadecimal fixture.
+- [x] Documented read, write, validation, and safe-write test matrix.
+- [x] Safe-write strategy using a temporary file, synchronization, and atomic rename.
+- [ ] Implement the reader and writer and run the automated C++ test suite alongside the backend.
