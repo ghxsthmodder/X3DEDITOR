@@ -52,6 +52,33 @@ As tags abaixo são a proposta inicial do schema:
 
 Uma seção poderá conter uma contagem de registros (`uint32`) seguida pelos registros correspondentes. Strings serão UTF-8 prefixadas pelo tamanho (`uint32`), sem terminador nulo.
 
+## Hierarquia de nós
+
+A hierarquia da cena utilizará **índices**, não ponteiros entre objetos. Essa decisão mantém a representação independente de endereços de memória e facilita a serialização no formato binário.
+
+Representação-base em C++:
+
+```cpp
+struct Node {
+    std::string name;
+    int32_t parentIndex;
+    std::vector<uint32_t> meshIndices;
+
+    float position[3];
+    float rotation[4];
+    float scale[3];
+};
+```
+
+Convenções definidas:
+
+- `parentIndex`: índice do nó pai na coleção de nós; `-1` indica que o nó não possui pai (nó raiz).
+- `meshIndices`: índices das malhas associadas ao nó na coleção de malhas.
+- Os índices são referências lógicas às coleções, não offsets de bytes no arquivo.
+- O leitor deverá validar se os índices referenciados existem e se a hierarquia não contém referências inválidas.
+
+Os campos de transformação representam a transformação local do nó. A ordem e a convenção exata dos componentes do quaternion serão especificadas junto ao layout binário definitivo de `NODE`.
+
 ## Dados de malha
 
 A seção `MESH` deverá armazenar, no mínimo, os dados necessários para reconstruir uma malha:
@@ -123,4 +150,3 @@ Seções desconhecidas poderão ser ignoradas usando o campo `size`, desde que o
 - [ ] Definir suporte a múltiplos canais UV e submeshes.
 - [ ] Definir a estratégia de gravação segura (arquivo temporário e substituição).
 - [ ] Criar exemplos binários e testes de leitura/escrita.
-
