@@ -162,7 +162,26 @@ Os valores numéricos dos parâmetros serão armazenados como `float32`. Os limi
 
 ## Texturas
 
-Na primeira versão, a seção `TEXR` armazenará referências/caminhos para arquivos de textura externos ao `.bin`, além dos metadados estritamente necessários. Não incorporaremos os bytes das imagens ao arquivo de projeto neste primeiro schema.
+Na primeira versão, a seção `TEXR` armazenará referências a arquivos de textura externos ao `.bin`, sem incorporar os bytes das imagens ao arquivo de projeto.
+
+Representação-base em C++:
+
+```cpp
+struct Texture {
+    std::string name;
+    std::string path;
+};
+```
+
+Convenções:
+
+- `name`: nome identificador da textura.
+- `path`: caminho **relativo** à pasta do projeto, armazenado em UTF-8.
+- Caminhos absolutos não serão aceitos.
+- Os arquivos de imagem deverão estar dentro da estrutura de diretórios do projeto.
+- A estrutura não armazenará os pixels da imagem; o carregamento ocorrerá quando a textura for necessária.
+
+O leitor deverá validar o caminho resolvido para impedir que referências relativas escapem da pasta do projeto (por exemplo, por meio de segmentos `..`).
 
 ## Integração com bibliotecas
 
