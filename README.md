@@ -44,7 +44,7 @@ O projeto utilizará uma arquitetura híbrida:
 
 O projeto terá como plataforma exclusiva o **Android**. A comunicação entre Java/Kotlin e o backend C++ será feita por JNI. Operações pesadas não deverão bloquear a thread da interface.
 
-O formato de dados interno inicial será **JSON**, com possibilidade de migração ou evolução para um formato binário próprio no futuro. A estrutura deverá ser versionada para permitir essa evolução.
+O formato de dados interno será binário, com extensão **`.bin`**. A estrutura será deliberadamente simples e versionada, com cabeçalho e seções de dados.
 
 Detalhes: [Formato de dados interno](docs/data-format.md).
 
@@ -79,7 +79,7 @@ Ainda estão em aberto:
 - Versão mínima do Android.
 - Contrato detalhado da API JNI.
 - Formatos de importação e exportação de modelos.
-- Formato e estrutura dos arquivos de projeto.
+- Detalhamento do schema binário `.bin`.
 - Arquitetura do viewport 3D.
 - Ferramentas de edição e inspeção de malhas.
 - Fluxo de texturização e formatos de imagem.
@@ -94,8 +94,9 @@ Ainda estão em aberto:
 - [x] Escolher xatlas para geração de UVs e ilhas.
 - [ ] Especificar o fluxo de criação e gerenciamento de projetos.
 - [x] Definir Android como plataforma exclusiva.
-- [x] Definir JSON como formato interno inicial, com evolução binária futura.
-- [ ] Definir a estrutura de diretórios e metadados dos projetos.
+- [x] Escolher formato binário `.bin` como formato interno desde o início.
+- [x] Definir a extensão `.bin` e a estrutura básica do contêiner.
+- [ ] Definir a estrutura de diretórios dos projetos.
 - [ ] Especificar a área de edição e o viewport 3D.
 - [x] Definir Java/Kotlin para interface e C++ para backend.
 - [x] Escolher Assimp para facilitar a importação/exportação de modelos.
