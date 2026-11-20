@@ -233,6 +233,7 @@ O formato `.bin` é interno ao projeto e não substitui os formatos de intercâm
 
 - [x] Revisão técnica da especificação da versão 1 e consolidação das regras.
 - [x] Layouts binários de `META`, `NODE`, `MESH`, `MATL` e `TEXR`.
+- [x] Definir UV0 como único canal e excluir submeshes da versão 1.
 - [x] Exemplo binário mínimo em fixture hexadecimal.
 - [x] Matriz de testes de leitura, escrita, validação e gravação segura documentada.
 - [x] Estratégia de gravação segura por temporário, sincronização e rename atômico.
