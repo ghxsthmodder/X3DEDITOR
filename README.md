@@ -41,7 +41,7 @@ Texturing, UV editing, advanced PBR materials, animation, rigging, Bevel Modifie
 ## Technical documentation
 
 - [Master technical specification and 1.0 roadmap](docs/specification-v1.0.md)
-- [Technology architecture](docs/architecture.md)
+- [Technology architecture](docs/architecture.en.md)
 - [X3D v1 internal binary format](docs/data-format.md)
 - [X3D v1 format conformance tests](docs/format-v1-validation.md)
 
