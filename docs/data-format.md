@@ -74,7 +74,7 @@ Convenções definidas:
 
 - `parentIndex`: índice do nó pai na coleção de nós; `-1` indica que o nó não possui pai (nó raiz).
 - `meshIndices`: índices das malhas associadas ao nó na coleção de malhas.
-- Os índices são referências lógicas às coleções, não offsets de bytes no arquivo.
+- Os índices são referências lógicas às coleções, não offsets de bytes no arquivo. O `materialIndex` segue a mesma convenção e referencia a coleção de materiais.
 - O leitor deverá validar se os índices referenciados existem e se a hierarquia não contém referências inválidas.
 
 Os campos de transformação representam a transformação local do nó. A ordem e a convenção exata dos componentes do quaternion serão especificadas junto ao layout binário definitivo de `NODE`.
@@ -104,6 +104,8 @@ struct Mesh {
     std::vector<float> normals;
     std::vector<float> uvs;
     std::vector<uint32_t> indices;
+
+    int32_t materialIndex;
 };
 ```
 
@@ -112,6 +114,7 @@ Convenções:
 - `normals`: sequência de componentes XYZ; quando presente, tamanho igual a `vertexCount * 3`.
 - `uvs`: sequência de componentes UV; no canal inicial, tamanho igual a `vertexCount * 2`.
 - `indices`: índices de vértices usando `uint32_t`; a contagem deve ser compatível com a topologia suportada.
+- `materialIndex`: índice do material na coleção de materiais; `-1` significa que a malha não possui material atribuído.
 
 Os vetores armazenam dados em ordem contígua. O payload binário gravará os componentes diretamente, em little-endian, com contagens explícitas para que o leitor possa validar os tamanhos antes de alocar memória.
 
@@ -146,7 +149,7 @@ Seções desconhecidas poderão ser ignoradas usando o campo `size`, desde que o
 
 - [ ] Fixar o valor inicial de `version`.
 - [ ] Definir os payloads de `META`, `NODE`, `MESH`, `MATL` e `TEXR`.
-- [ ] Definir identificadores e referências entre nodes, meshes e materiais.
+- [x] Definir referências entre nodes, meshes e materiais por índices (`parentIndex`, `meshIndices` e `materialIndex`).
 - [ ] Definir suporte a múltiplos canais UV e submeshes.
 - [ ] Definir a estratégia de gravação segura (arquivo temporário e substituição).
 - [ ] Criar exemplos binários e testes de leitura/escrita.
