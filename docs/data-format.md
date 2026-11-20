@@ -22,7 +22,7 @@ O arquivo será composto por um cabeçalho seguido pelas seções:
 | Campo | Tipo | Descrição |
 |---|---|---|
 | magic | 4 bytes | Identificação ASCII `X3D\0` |
-| version | uint16 | Versão do formato |
+| version | uint16 | Versão do formato; valor inicial definido como `1` |
 | sectionCount | uint16 | Quantidade de seções |
 | sections | variável | Seções sequenciais |
 
@@ -229,7 +229,7 @@ Seções desconhecidas poderão ser ignoradas usando o campo `size`, desde que o
 
 ## Pendências antes da implementação
 
-- [ ] Fixar o valor inicial de `version`.
+- [x] Fixar o valor inicial de `version` como `1`.
 - [ ] Definir os payloads de `META`, `NODE`, `MESH`, `MATL` e `TEXR`.
 - [x] Definir referências entre nodes, meshes e materiais por índices (`parentIndex`, `meshIndices` e `materialIndex`).
 - [ ] Definir suporte a múltiplos canais UV e submeshes.
