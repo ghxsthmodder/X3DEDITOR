@@ -74,7 +74,7 @@ Convenções definidas:
 
 - `parentIndex`: índice do nó pai na coleção de nós; `-1` indica que o nó não possui pai (nó raiz).
 - `meshIndices`: índices das malhas associadas ao nó na coleção de malhas.
-- Os índices são referências lógicas às coleções, não offsets de bytes no arquivo. O `materialIndex` segue a mesma convenção e referencia a coleção de materiais.
+- Os índices são referências lógicas às coleções, não offsets de bytes no arquivo.
 - O leitor deverá validar se os índices referenciados existem e se a hierarquia não contém referências inválidas.
 
 Os campos de transformação representam a transformação local do nó. A ordem e a convenção exata dos componentes do quaternion serão especificadas junto ao layout binário definitivo de `NODE`.
@@ -121,6 +121,44 @@ Os vetores armazenam dados em ordem contígua. O payload binário gravará os co
 Essa é a representação-base inicial. Submeshes, múltiplos canais UV, cores de vértices, tangentes e outros atributos poderão ser adicionados ao schema quando suas necessidades forem definidas, sem presumir que já fazem parte desta estrutura mínima.
 
 A integração com xatlas utilizará os arrays de posições e índices como entrada; as coordenadas UV resultantes serão copiadas/transferidas para `uvs`, respeitando a correspondência de vértices produzida pelo processo de geração.
+
+## Materiais
+
+A representação interna de materiais utilizará parâmetros PBR e referências por índice para cada textura. As texturas metallic e roughness serão referenciadas separadamente.
+
+Representação-base em C++:
+
+```cpp
+struct Material {
+    std::string name;
+
+    float albedo[4];
+    float metallic;
+    float roughness;
+    float opacity;
+    float emissive[3];
+
+    int32_t albedoTexture;
+    int32_t normalTexture;
+    int32_t metallicTexture;
+    int32_t roughnessTexture;
+    int32_t occlusionTexture;
+    int32_t emissiveTexture;
+};
+```
+
+Convenções:
+
+- `albedo`: cor base RGBA.
+- `metallic`: fator metálico.
+- `roughness`: fator de rugosidade.
+- `opacity`: fator de opacidade.
+- `emissive`: cor de emissão RGB.
+- Cada campo `*Texture` referencia um registro da coleção de texturas.
+- Índice `-1` indica que não há textura associada àquele parâmetro.
+- `metallicTexture` e `roughnessTexture` são referências independentes.
+
+Os valores numéricos dos parâmetros serão armazenados como `float32`. Os limites, valores padrão e regras de combinação entre fator e textura serão especificados no fechamento do payload `MATL`.
 
 ## Texturas
 
