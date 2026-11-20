@@ -65,6 +65,33 @@ A seção `MESH` deverá armazenar, no mínimo, os dados necessários para recon
 
 O layout exato dos registros de malha será fechado antes da implementação do leitor/escritor. A organização deverá permitir que xatlas receba posições e índices e que os UVs gerados sejam gravados de volta na malha.
 
+### Representação interna em C++
+
+A representação de malhas no backend utilizará arrays contíguos com `std::vector`, evitando alocações por vértice e facilitando o envio dos dados ao xatlas e ao serializador binário.
+
+Representação-base aprovada:
+
+```cpp
+struct Mesh {
+    std::vector<float> positions;
+    std::vector<float> normals;
+    std::vector<float> uvs;
+    std::vector<uint32_t> indices;
+};
+```
+
+Convenções:
+- `positions`: sequência de componentes XYZ; tamanho igual a `vertexCount * 3`.
+- `normals`: sequência de componentes XYZ; quando presente, tamanho igual a `vertexCount * 3`.
+- `uvs`: sequência de componentes UV; no canal inicial, tamanho igual a `vertexCount * 2`.
+- `indices`: índices de vértices usando `uint32_t`; a contagem deve ser compatível com a topologia suportada.
+
+Os vetores armazenam dados em ordem contígua. O payload binário gravará os componentes diretamente, em little-endian, com contagens explícitas para que o leitor possa validar os tamanhos antes de alocar memória.
+
+Essa é a representação-base inicial. Submeshes, múltiplos canais UV, cores de vértices, tangentes e outros atributos poderão ser adicionados ao schema quando suas necessidades forem definidas, sem presumir que já fazem parte desta estrutura mínima.
+
+A integração com xatlas utilizará os arrays de posições e índices como entrada; as coordenadas UV resultantes serão copiadas/transferidas para `uvs`, respeitando a correspondência de vértices produzida pelo processo de geração.
+
 ## Texturas
 
 Na primeira versão, a seção `TEXR` armazenará referências/caminhos para arquivos de textura externos ao `.bin`, além dos metadados estritamente necessários. Não incorporaremos os bytes das imagens ao arquivo de projeto neste primeiro schema.
