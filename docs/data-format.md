@@ -145,6 +145,8 @@ Representação-base aprovada:
 
 ```cpp
 struct Mesh {
+    std::string name;
+
     std::vector<float> positions;
     std::vector<float> normals;
     std::vector<float> uvs;
@@ -228,6 +230,91 @@ Convenções:
 
 O leitor deverá validar o caminho resolvido para impedir que referências relativas escapem da pasta do projeto (por exemplo, por meio de segmentos `..`).
 
+## Layouts binários definitivos da versão 1
+
+As regras abaixo complementam as representações C++ anteriores e definem a ordem exata dos campos gravados. Não há padding entre campos.
+
+### META
+
+O payload contém um único registro, sem contador:
+1. `name`: String UTF-8.
+2. `description`: String UTF-8.
+3. `versionMajor`: `uint32`.
+4. `versionMinor`: `uint32`.
+5. `versionPatch`: `uint32`.
+
+Não existe campo de autor. A versão do projeto é independente da versão do formato no cabeçalho.
+
+### NODE
+
+O payload começa com `nodeCount` (`uint32`). Cada nó é gravado na ordem da coleção:
+1. `name`: String UTF-8.
+2. `parentIndex`: `int32`; `-1` significa raiz.
+3. `meshCount`: `uint32`.
+4. `meshIndices`: `meshCount` valores `uint32`.
+5. `position`: 3 × `float32` (XYZ).
+6. `rotation`: 4 × `float32` (XYZW).
+7. `scale`: 3 × `float32` (XYZ).
+
+Transformações são locais. O leitor valida índices e rejeita ciclos na hierarquia.
+
+### MESH
+
+O payload começa com `meshCount` (`uint32`). Cada registro é gravado nesta ordem:
+1. `name`: String UTF-8.
+2. `vertexCount`: `uint32`.
+3. `indexCount`: `uint32`.
+4. `materialIndex`: `int32`; `-1` significa sem material.
+5. `attributeFlags`: `uint32`.
+6. `positions`: `vertexCount × 3` valores `float32`, obrigatórios.
+7. `normals`: `vertexCount × 3` valores `float32`, somente se o bit 0 estiver ativo.
+8. `uvs`: `vertexCount × 2` valores `float32`, somente se o bit 1 estiver ativo.
+9. `indices`: `indexCount` valores `uint32`.
+
+Flags da versão 1: bit 0 (`0x1`) indica normais; bit 1 (`0x2`) indica UV0. Todos os outros bits devem ser zero. UV0 é o único canal UV da versão 1.
+
+A versão 1 utiliza listas de triângulos; portanto `indexCount` deve ser múltiplo de três e cada índice deve ser menor que `vertexCount`. A geometria importada pelo Assimp deverá ser triangulada. Cada malha possui um único material; submeshes e múltiplos materiais por malha ficam fora da versão 1. Uma malha deve ter ao menos um vértice.
+
+A representação C++ de `Mesh` inclui `name`, além dos arrays e `materialIndex`. Os vetores de atributos são contíguos.
+
+### MATL
+
+O payload começa com `materialCount` (`uint32`). Cada material contém:
+1. `name`: String UTF-8.
+2. `albedo`: 4 × `float32` (RGBA).
+3. `metallic`: `float32`.
+4. `roughness`: `float32`.
+5. `opacity`: `float32`.
+6. `emissive`: 3 × `float32` (RGB).
+7. `albedoTexture`: `int32`.
+8. `normalTexture`: `int32`.
+9. `metallicTexture`: `int32`.
+10. `roughnessTexture`: `int32`.
+11. `occlusionTexture`: `int32`.
+12. `emissiveTexture`: `int32`.
+
+Os fatores metallic, roughness e opacity devem estar entre 0 e 1. Valores padrão para material novo: albedo (1,1,1,1), metallic 0, roughness 1, opacity 1 e emissive (0,0,0). Cada índice de textura referencia `TEXR`; `-1` significa ausência. As referências metallic e roughness são independentes.
+
+### TEXR
+
+O payload começa com `textureCount` (`uint32`). Cada textura contém:
+1. `name`: String UTF-8.
+2. `path`: String UTF-8 relativa à pasta do projeto.
+
+Caminhos absolutos não são aceitos. Os bytes das imagens não são incorporados ao `.bin`. O caminho normalizado deve permanecer dentro da pasta do projeto; a validação também deve impedir escapes por segmentos `..` ou links simbólicos.
+
+### Regras comuns de validação
+
+- Coleções são indexadas a partir de zero, na ordem dos registros.
+- Cada seção conhecida aparece no máximo uma vez; seções conhecidas ausentes ou duplicadas devem ser rejeitadas.
+- Coleções vazias usam contagem zero; META sempre contém seu registro.
+- O leitor deve respeitar o limite de cada payload e terminar exatamente no seu fim.
+- Validar contagens e operações de tamanho antes de alocar memória, evitando overflow.
+- Validar todas as referências: `parentIndex`, `meshIndices`, `materialIndex` e índices de textura.
+- Rejeitar floats NaN ou infinitos.
+- Seções desconhecidas podem ser ignoradas usando o tamanho declarado.
+- Na versão 1 não há compressão, criptografia, checksums, offsets globais, múltiplos canais UV, submeshes ou múltiplos materiais por malha.
+
 ## Integração com bibliotecas
 
 - **Assimp:** importa formatos externos para a representação de cena do X3D Editor e exporta a representação interna para os formatos suportados.
@@ -250,7 +337,7 @@ Seções desconhecidas poderão ser ignoradas usando o campo `size`, desde que o
 ## Pendências antes da implementação
 
 - [x] Fixar o valor inicial de `version` como `1`.
-- [ ] Definir os payloads de `META`, `NODE`, `MESH`, `MATL` e `TEXR`.
+- [x] Definir os layouts binários de `META`, `NODE`, `MESH`, `MATL` e `TEXR`.
 - [x] Definir referências entre nodes, meshes e materiais por índices (`parentIndex`, `meshIndices` e `materialIndex`).
 - [ ] Definir suporte a múltiplos canais UV e submeshes.
 - [ ] Definir a estratégia de gravação segura (arquivo temporário e substituição).
