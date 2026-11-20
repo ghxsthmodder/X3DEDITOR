@@ -33,6 +33,19 @@ A primeira tela será um gerenciador de projetos, contendo:
 
 As miniaturas serão opcionais e deverão ser carregadas sob demanda. A tela inicial não deverá carregar geometrias ou texturas dos modelos apenas para exibir a lista.
 
+## Arquitetura tecnológica
+
+O projeto utilizará uma arquitetura híbrida:
+
+- **Java/Kotlin:** camada de interface, Material Design, gerenciamento de projetos e interação com o usuário.
+- **C++:** backend para processamento de malhas, geração de UVs e operações de importação/exportação.
+- **[xatlas](https://github.com/jpcy/xatlas):** geração de mapas UV e ilhas.
+- **[Assimp](https://github.com/assimp/assimp):** biblioteca para facilitar a importação e exportação de modelos em diferentes formatos suportados.
+
+A comunicação entre a interface JVM e o backend nativo será definida conforme a plataforma. Em Android, JNI é uma opção a avaliar. Operações pesadas não deverão bloquear a thread da interface.
+
+Detalhes: [Arquitetura tecnológica](docs/architecture.md).
+
 ## UV Unwrapping
 
 O [xatlas](https://github.com/jpcy/xatlas) foi escolhido para o processo de geração automática de UVs. A integração deverá permitir:
@@ -59,7 +72,8 @@ O projeto está na fase de planejamento. A definição da tela inicial é o prim
 
 Ainda estão em aberto:
 
-- Plataforma e tecnologias de implementação.
+- Plataforma e versão mínima de suporte.
+- Estratégia definitiva de comunicação Java/Kotlin ↔ C++.
 - Formatos de importação e exportação de modelos.
 - Formato e estrutura dos arquivos de projeto.
 - Arquitetura do viewport 3D.
@@ -77,7 +91,9 @@ Ainda estão em aberto:
 - [ ] Especificar o fluxo de criação e gerenciamento de projetos.
 - [ ] Definir a estrutura de diretórios e metadados dos projetos.
 - [ ] Especificar a área de edição e o viewport 3D.
-- [ ] Planejar a integração técnica do xatlas.
+- [x] Definir Java/Kotlin para interface e C++ para backend.
+- [x] Escolher Assimp para facilitar a importação/exportação de modelos.
+- [ ] Planejar a integração técnica do xatlas e Assimp.
 - [ ] Especificar as ferramentas de texturização.
 
 ## Status
