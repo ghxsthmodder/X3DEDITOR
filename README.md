@@ -49,20 +49,21 @@ Texturização, edição UV, materiais PBR avançados, animação, rigging, Beve
 
 ## Etapas de desenvolvimento
 
-1. Preparação e decisões de build.
-2. Esqueleto Android e JNI.
-3. Core, Logger, Device e diagnóstico.
-4. Fundação Vulkan e viewport mínima.
-5. Scene Graph e transformações.
-6. Geometria e topologia.
-7. Seleção, ferramentas e Command History.
-8. Modifier Stack e Mirror.
-9. Projetos e formato X3D.
-10. Importação e exportação.
-11. Interface completa e fluxo de trabalho.
-12. Qualidade gráfica, otimização e testes integrados para lançamento.
+0. Preparação e decisões de build.
+1. Esqueleto do aplicativo Android e JNI.
+2. Core, Logger, Device e diagnóstico inicial.
+3. Fundação Vulkan e viewport mínima.
+4. Scene Graph e transformações.
+5. Geometria e topologia.
+6. Seleção, ferramentas e Command History.
+7. Modifier Stack e Mirror.
+8. Projetos e formato X3D.
+9. Importação e exportação.
+10. Interface completa e fluxo de trabalho.
+11. Qualidade gráfica e otimização.
+12. Testes integrados, estabilidade e lançamento 1.0.
 
-Os critérios de aceitação de cada etapa estão descritos na [especificação mestre](docs/specification-v1.0.md).
+Os entregáveis e critérios de aceitação de cada etapa estão descritos na [especificação mestre](docs/specification-v1.0.md).
 
 ## Status
 
