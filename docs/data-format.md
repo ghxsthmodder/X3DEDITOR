@@ -102,7 +102,27 @@ Convenções definidas:
 - Os índices são referências lógicas às coleções, não offsets de bytes no arquivo.
 - O leitor deverá validar se os índices referenciados existem e se a hierarquia não contém referências inválidas.
 
-Os campos de transformação representam a transformação local do nó. A ordem e a convenção exata dos componentes do quaternion serão especificadas junto ao layout binário definitivo de `NODE`.
+Os campos de transformação representam a transformação local do nó. A rotação utiliza quaternion na ordem **XYZW** (`x`, `y`, `z`, `w`), tanto na representação em memória quanto na serialização binária.
+
+### Layout binário do payload NODE
+
+O payload da seção `NODE` começa com `nodeCount` (`uint32`). Em seguida são gravados os registros, na ordem da coleção de nós.
+
+Cada registro contém, nesta ordem:
+
+| Ordem | Campo | Tipo |
+|---:|---|---|
+| 1 | `name` | String UTF-8 prefixada por `uint32` de tamanho |
+| 2 | `parentIndex` | `int32` |
+| 3 | `meshCount` | `uint32` |
+| 4 | `meshIndices` | `meshCount × uint32` |
+| 5 | `position` | 3 × `float32` |
+| 6 | `rotation` | 4 × `float32`, ordem XYZW |
+| 7 | `scale` | 3 × `float32` |
+
+Todos os campos numéricos seguem a convenção little-endian definida para o arquivo. O tamanho de cada registro é variável devido às strings e à quantidade de índices de malhas.
+
+O leitor deverá validar as contagens e os limites do payload antes de alocar ou acessar os arrays.
 
 ## Dados de malha
 
