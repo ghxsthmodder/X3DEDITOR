@@ -1,72 +1,72 @@
 # X3D Editor
 
-**Editor de modelagem 3D para Android, com backend C++ e renderização Vulkan.**
+**3D modeling editor for Android, with a C++ backend and Vulkan rendering.**
 
-O X3D Editor é um projeto em fase de especificação e planejamento da versão 1.0. Seu objetivo é oferecer ferramentas de modelagem poligonal, organização de cenas, importação/exportação e um formato binário nativo, priorizando desempenho, estabilidade e uso eficiente de memória em dispositivos móveis.
+X3D Editor is a project in the specification and planning phase for version 1.0. Its goal is to provide polygon modeling tools, scene organization, model import/export, and a native binary format, prioritizing performance, stability, and efficient memory usage on mobile devices.
 
-## Especificação principal
+## Main specification
 
-A especificação técnica mestre reúne o escopo funcional, arquitetura, requisitos de renderização, compatibilidade, riscos e etapas de desenvolvimento:
+The master technical specification consolidates the functional scope, architecture, rendering requirements, compatibility, risks, and development stages:
 
-- **[X3D Editor 1.0 — Especificação técnica mestre e plano de desenvolvimento](docs/specification-v1.0.md)**
+- **[X3D Editor 1.0 — Master Technical Specification and Development Roadmap](docs/specification-v1.0.md)**
 
-Esse documento é a referência de escopo da versão 1.0. Ele não significa que os recursos já estejam implementados.
+This document is the scope reference for version 1.0. It does not mean that the listed features have already been implemented.
 
-## Plataforma e arquitetura
+## Platform and architecture
 
-- **Plataforma:** Android exclusivo, orientação horizontal (*landscape*).
-- **Interface:** Java e/ou Kotlin; a escolha final será feita na etapa de preparação do build.
+- **Platform:** Android only, landscape orientation.
+- **UI:** Java and/or Kotlin; the final choice will be made during build preparation.
 - **Backend:** C++.
-- **Integração:** JNI.
-- **Renderização:** Vulkan 1.1.
-- **Shaders:** GLSL como fonte e SPIR-V como formato compilado.
-- **Importação/exportação:** Assimp.
-- **Estrutura topológica editável:** Half-Edge Mesh.
-- **Formato nativo:** X3D binário, extensão `.bin`.
+- **Integration:** JNI.
+- **Rendering:** Vulkan 1.1.
+- **Shaders:** GLSL source and compiled SPIR-V.
+- **Import/export:** Assimp.
+- **Editable topology:** Half-Edge Mesh.
+- **Native format:** X3D binary, `.bin` extension.
 
-## Escopo resumido da versão 1.0
+## Version 1.0 scope at a glance
 
-- Gerenciador de projetos e viewport 3D.
-- Modelagem poligonal: Extrude, Inset, Bevel, Loop Cut, Merge, Subdivide, Delete e Move Pivot.
-- Seleção de objetos, vértices, arestas e faces.
-- Transformações, Snap e restrição por eixos.
-- Scene Graph com malhas, Empty, câmeras e luzes.
-- Modifier Stack com Mirror.
-- Undo/Redo, salvamento automático e recuperação.
-- Importação/exportação glTF/GLB, FBX, OBJ e DAE.
-- Diagnóstico, logs e Crash Reports locais.
+- Project manager and 3D viewport.
+- Polygon modeling: Extrude, Inset, Bevel, Loop Cut, Merge, Subdivide, Delete, and Move Pivot.
+- Object, vertex, edge, and face selection.
+- Transforms, Snap, and axis constraints.
+- Scene Graph with meshes, Empty nodes, cameras, and lights.
+- Modifier Stack with Mirror.
+- Undo/Redo, autosave, and recovery.
+- glTF/GLB, FBX, OBJ, and DAE import/export.
+- Diagnostics, logging, and local Crash Reports.
 
-Texturização, edição UV, materiais PBR avançados, animação, rigging, Bevel Modifier e Subdivision Surface ficam para versões futuras. Consulte a especificação mestre para o escopo completo e as exclusões.
+Texturing, UV editing, advanced PBR materials, animation, rigging, Bevel Modifier, and Subdivision Surface are deferred to future versions. See the master specification for the complete scope and exclusions.
 
-## Documentação técnica
+## Technical documentation
 
-- [Especificação técnica mestre e roadmap 1.0](docs/specification-v1.0.md)
-- [Arquitetura tecnológica](docs/architecture.md)
-- [Formato binário interno X3D v1](docs/data-format.md)
-- [Testes de conformidade do formato X3D v1](docs/format-v1-validation.md)
+- [Master technical specification and 1.0 roadmap](docs/specification-v1.0.md)
+- [Technology architecture](docs/architecture.md)
+- [X3D v1 internal binary format](docs/data-format.md)
+- [X3D v1 format conformance tests](docs/format-v1-validation.md)
 
-**Importante sobre o formato:** a especificação binária v1 existente continua sendo a fonte de verdade para o layout atual. A especificação mestre registra diferenças entre o schema atual e os requisitos funcionais aprovados; qualquer evolução deverá ser versionada e acompanhada de fixtures e testes.
+**Format note:** the existing v1 binary specification remains the source of truth for the current byte layout. The master specification records differences between the current schema and the approved functional requirements; any evolution must be versioned and accompanied by fixtures and tests.
 
-## Etapas de desenvolvimento
+## Development stages
 
-0. Preparação e decisões de build.
-1. Esqueleto do aplicativo Android e JNI.
-2. Core, Logger, Device e diagnóstico inicial.
-3. Fundação Vulkan e viewport mínima.
-4. Scene Graph e transformações.
-5. Geometria e topologia.
-6. Seleção, ferramentas e Command History.
-7. Modifier Stack e Mirror.
-8. Projetos e formato X3D.
-9. Importação e exportação.
-10. Interface completa e fluxo de trabalho.
-11. Qualidade gráfica e otimização.
-12. Testes integrados, estabilidade e lançamento 1.0.
+0. Build preparation and decisions.
+1. Android application skeleton and JNI.
+2. Core, Logger, Device, and initial diagnostics.
+3. Vulkan foundation and minimal viewport.
+4. Scene Graph and transforms.
+5. Geometry and topology.
+6. Selection, tools, and Command History.
+7. Modifier Stack and Mirror.
+8. Projects and X3D format.
+9. Import and export.
+10. Complete interface and workflow.
+11. Graphics quality and optimization.
+12. Integration testing, stability, and 1.0 release.
 
-Os entregáveis e critérios de aceitação de cada etapa estão descritos na [especificação mestre](docs/specification-v1.0.md).
+Deliverables and acceptance criteria for each stage are described in the [master specification](docs/specification-v1.0.md).
 
 ## Status
 
-**Em planejamento — escopo funcional da versão 1.0 consolidado; implementação e validação técnica pendentes.**
+**Planning — version 1.0 functional scope consolidated; implementation and technical validation pending.**
 
-O status de implementação deve ser atualizado somente quando houver código e testes que comprovem a conclusão dos critérios de aceitação.
+Implementation status must only be updated when code and tests provide evidence that the acceptance criteria have been met.
