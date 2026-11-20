@@ -70,15 +70,11 @@ Princípios:
 
 ## Formato de dados interno
 
-O formato interno inicial será **JSON**. Ele será utilizado para representar a estrutura dos dados do projeto e do modelo durante a primeira fase.
+O formato interno será binário desde a primeira versão, utilizando a extensão **`.bin`**. A estrutura será intencionalmente simples: um cabeçalho pequeno seguido por seções identificadas, cada uma contendo os dados de uma categoria (por exemplo, cena, malhas, materiais e referências a texturas).
 
-A arquitetura deverá permitir a evolução futura para um formato binário, caso JSON apresente limitações de desempenho, tamanho ou consumo de memória. Para facilitar essa transição:
-- versionar o formato e seus documentos;
-- separar a descrição estrutural dos dados de grande volume sempre que possível;
-- evitar dependência da interface em detalhes específicos da serialização;
-- definir regras de conversão/migração entre versões.
+O formato terá identificação e versão para que o backend possa validar arquivos e evoluir o schema sem complexidade desnecessária. Arrays numéricos serão armazenados diretamente em binário, evitando serialização textual de grandes quantidades de vértices, índices e UVs.
 
-A especificação dos campos e da organização dos dados será detalhada em [data-format.md](data-format.md).
+A especificação inicial está em [data-format.md](data-format.md).
 
 ## Decisões ainda pendentes
 
