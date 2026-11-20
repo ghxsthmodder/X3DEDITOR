@@ -236,4 +236,4 @@ O formato `.bin` é interno ao projeto e não substitui os formatos de intercâm
 - [x] Exemplo binário mínimo em fixture hexadecimal.
 - [x] Matriz de testes de leitura, escrita, validação e gravação segura documentada.
 - [x] Estratégia de gravação segura por temporário, sincronização e rename atômico.
-- [ ] Implementar o leitor, gravador e testes automatizados em C++ junto ao backend.
+- [ ] Implementar o leitor, gravador e executar a suíte automatizada em C++ junto ao backend.
