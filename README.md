@@ -38,11 +38,15 @@ As miniaturas serão opcionais e deverão ser carregadas sob demanda. A tela ini
 O projeto utilizará uma arquitetura híbrida:
 
 - **Java/Kotlin:** camada de interface, Material Design, gerenciamento de projetos e interação com o usuário.
-- **C++:** backend para processamento de malhas, geração de UVs e operações de importação/exportação.
+- **C++:** backend Android nativo para processamento de malhas, geração de UVs e operações de importação/exportação.
 - **[xatlas](https://github.com/jpcy/xatlas):** geração de mapas UV e ilhas.
 - **[Assimp](https://github.com/assimp/assimp):** biblioteca para facilitar a importação e exportação de modelos em diferentes formatos suportados.
 
-A comunicação entre a interface JVM e o backend nativo será definida conforme a plataforma. Em Android, JNI é uma opção a avaliar. Operações pesadas não deverão bloquear a thread da interface.
+O projeto terá como plataforma exclusiva o **Android**. A comunicação entre Java/Kotlin e o backend C++ será feita por JNI. Operações pesadas não deverão bloquear a thread da interface.
+
+O formato de dados interno inicial será **JSON**, com possibilidade de migração ou evolução para um formato binário próprio no futuro. A estrutura deverá ser versionada para permitir essa evolução.
+
+Detalhes: [Formato de dados interno](docs/data-format.md).
 
 Detalhes: [Arquitetura tecnológica](docs/architecture.md).
 
@@ -72,8 +76,8 @@ O projeto está na fase de planejamento. A definição da tela inicial é o prim
 
 Ainda estão em aberto:
 
-- Plataforma e versão mínima de suporte.
-- Estratégia definitiva de comunicação Java/Kotlin ↔ C++.
+- Versão mínima do Android.
+- Contrato detalhado da API JNI.
 - Formatos de importação e exportação de modelos.
 - Formato e estrutura dos arquivos de projeto.
 - Arquitetura do viewport 3D.
@@ -89,6 +93,8 @@ Ainda estão em aberto:
 - [x] Definir a lista de projetos como tela inicial.
 - [x] Escolher xatlas para geração de UVs e ilhas.
 - [ ] Especificar o fluxo de criação e gerenciamento de projetos.
+- [x] Definir Android como plataforma exclusiva.
+- [x] Definir JSON como formato interno inicial, com evolução binária futura.
 - [ ] Definir a estrutura de diretórios e metadados dos projetos.
 - [ ] Especificar a área de edição e o viewport 3D.
 - [x] Definir Java/Kotlin para interface e C++ para backend.
