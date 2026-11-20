@@ -52,6 +52,31 @@ As tags abaixo são a proposta inicial do schema:
 
 Uma seção poderá conter uma contagem de registros (`uint32`) seguida pelos registros correspondentes. Strings serão UTF-8 prefixadas pelo tamanho (`uint32`), sem terminador nulo.
 
+## Metadados do projeto (META)
+
+A seção `META` armazenará informações básicas de identificação e versão do projeto.
+
+Representação-base em C++:
+
+```cpp
+struct Metadata {
+    std::string name;
+    std::string description;
+
+    uint32_t versionMajor;
+    uint32_t versionMinor;
+    uint32_t versionPatch;
+};
+```
+
+Convenções:
+
+- `name`: nome do projeto.
+- `description`: descrição opcional do projeto.
+- `versionMajor`, `versionMinor` e `versionPatch`: versão do projeto.
+- Não haverá campo de autor.
+- A versão do projeto é independente da versão do formato binário armazenada no cabeçalho do arquivo.
+
 ## Hierarquia de nós
 
 A hierarquia da cena utilizará **índices**, não ponteiros entre objetos. Essa decisão mantém a representação independente de endereços de memória e facilita a serialização no formato binário.
