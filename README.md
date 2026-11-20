@@ -1,110 +1,71 @@
 # X3D Editor
 
-**Editor de modelos 3D com suporte a texturização e geração de UVs.**
+**Editor de modelagem 3D para Android, com backend C++ e renderização Vulkan.**
 
-O X3D Editor é um projeto em fase inicial de definição. A proposta é criar uma ferramenta para trabalhar com modelos 3D, preparar seus mapas UV e aplicar/organizar texturas, priorizando desempenho e um fluxo de trabalho direto.
+O X3D Editor é um projeto em fase de especificação e planejamento da versão 1.0. Seu objetivo é oferecer ferramentas de modelagem poligonal, organização de cenas, importação/exportação e um formato binário nativo, priorizando desempenho, estabilidade e uso eficiente de memória em dispositivos móveis.
 
-## Objetivos
+## Especificação principal
 
-- Importar e trabalhar com modelos 3D.
-- Gerar mapas UV automaticamente utilizando [xatlas](https://github.com/jpcy/xatlas).
-- Visualizar e organizar as ilhas UV.
-- Oferecer ferramentas de texturização.
-- Manter uma interface objetiva, responsiva e eficiente.
+A especificação técnica mestre reúne o escopo funcional, arquitetura, requisitos de renderização, compatibilidade, riscos e etapas de desenvolvimento:
 
-## Interface
+- **[X3D Editor 1.0 — Especificação técnica mestre e plano de desenvolvimento](docs/specification-v1.0.md)**
 
-A direção inicial da interface foi definida com os seguintes princípios:
+Esse documento é a referência de escopo da versão 1.0. Ele não significa que os recursos já estejam implementados.
 
-- **Orientação principal:** horizontal (*landscape*), para aproveitar melhor a área de trabalho.
-- **Design:** Material Design. A versão específica será escolhida conforme a plataforma e a implementação.
-- **Prioridade:** desempenho e funcionalidade antes de refinamentos estéticos.
-- **Simplicidade:** evitar painéis, animações e elementos que não contribuam diretamente para o trabalho.
+## Plataforma e arquitetura
 
-### Tela inicial
+- **Plataforma:** Android exclusivo, orientação horizontal (*landscape*).
+- **Interface:** Java e/ou Kotlin; a escolha final será feita na etapa de preparação do build.
+- **Backend:** C++.
+- **Integração:** JNI.
+- **Renderização:** Vulkan 1.1.
+- **Shaders:** GLSL como fonte e SPIR-V como formato compilado.
+- **Importação/exportação:** Assimp.
+- **Estrutura topológica editável:** Half-Edge Mesh.
+- **Formato nativo:** X3D binário, extensão `.bin`.
 
-A primeira tela será um gerenciador de projetos, contendo:
+## Escopo resumido da versão 1.0
 
-- Lista de projetos existentes.
-- Ação para criar um novo projeto.
-- Pesquisa por nome.
-- Acesso para abrir um projeto.
-- Menu contextual para renomear ou excluir projetos.
+- Gerenciador de projetos e viewport 3D.
+- Modelagem poligonal: Extrude, Inset, Bevel, Loop Cut, Merge, Subdivide, Delete e Move Pivot.
+- Seleção de objetos, vértices, arestas e faces.
+- Transformações, Snap e restrição por eixos.
+- Scene Graph com malhas, Empty, câmeras e luzes.
+- Modifier Stack com Mirror.
+- Undo/Redo, salvamento automático e recuperação.
+- Importação/exportação glTF/GLB, FBX, OBJ e DAE.
+- Diagnóstico, logs e Crash Reports locais.
 
-As miniaturas serão opcionais e deverão ser carregadas sob demanda. A tela inicial não deverá carregar geometrias ou texturas dos modelos apenas para exibir a lista.
+Texturização, edição UV, materiais PBR avançados, animação, rigging, Bevel Modifier e Subdivision Surface ficam para versões futuras. Consulte a especificação mestre para o escopo completo e as exclusões.
 
-## Arquitetura tecnológica
+## Documentação técnica
 
-O projeto utilizará uma arquitetura híbrida:
+- [Especificação técnica mestre e roadmap 1.0](docs/specification-v1.0.md)
+- [Arquitetura tecnológica](docs/architecture.md)
+- [Formato binário interno X3D v1](docs/data-format.md)
+- [Testes de conformidade do formato X3D v1](docs/format-v1-validation.md)
 
-- **Java/Kotlin:** camada de interface, Material Design, gerenciamento de projetos e interação com o usuário.
-- **C++:** backend Android nativo para processamento de malhas, geração de UVs e operações de importação/exportação.
-- **[xatlas](https://github.com/jpcy/xatlas):** geração de mapas UV e ilhas.
-- **[Assimp](https://github.com/assimp/assimp):** biblioteca para facilitar a importação e exportação de modelos em diferentes formatos suportados.
+**Importante sobre o formato:** a especificação binária v1 existente continua sendo a fonte de verdade para o layout atual. A especificação mestre registra diferenças entre o schema atual e os requisitos funcionais aprovados; qualquer evolução deverá ser versionada e acompanhada de fixtures e testes.
 
-O projeto terá como plataforma exclusiva o **Android**. A comunicação entre Java/Kotlin e o backend C++ será feita por JNI. Operações pesadas não deverão bloquear a thread da interface.
+## Etapas de desenvolvimento
 
-O formato de dados interno será binário, com extensão **`.bin`**. A estrutura será deliberadamente simples e versionada, com cabeçalho e seções de dados.
+1. Preparação e decisões de build.
+2. Esqueleto Android e JNI.
+3. Core, Logger, Device e diagnóstico.
+4. Fundação Vulkan e viewport mínima.
+5. Scene Graph e transformações.
+6. Geometria e topologia.
+7. Seleção, ferramentas e Command History.
+8. Modifier Stack e Mirror.
+9. Projetos e formato X3D.
+10. Importação e exportação.
+11. Interface completa e fluxo de trabalho.
+12. Qualidade gráfica, otimização e testes integrados para lançamento.
 
-Detalhes: [Formato de dados interno](docs/data-format.md).
-
-Detalhes: [Arquitetura tecnológica](docs/architecture.md).
-
-## UV Unwrapping
-
-O [xatlas](https://github.com/jpcy/xatlas) foi escolhido para o processo de geração automática de UVs. A integração deverá permitir:
-
-1. Processar a geometria de entrada.
-2. Gerar o mapeamento UV (*UV unwrapping*).
-3. Criar e organizar as ilhas UV.
-4. Disponibilizar as coordenadas UV resultantes para as etapas de visualização e texturização.
-
-Os parâmetros de geração, as opções de empacotamento e o tratamento de malhas e materiais serão especificados durante o desenvolvimento.
-
-## Diretrizes de desempenho
-
-- Executar operações pesadas fora da thread da interface.
-- Carregar modelos, texturas e miniaturas somente quando necessário.
-- Evitar cópias desnecessárias de dados de geometria e imagem.
-- Manter o uso de memória previsível.
-- Preferir componentes de interface simples e eficientes.
-- Evitar efeitos visuais e animações sem benefício funcional.
-
-## Escopo atual
-
-O projeto está na fase de planejamento. A definição da tela inicial é o primeiro passo; a organização interna do editor 3D será documentada separadamente.
-
-Ainda estão em aberto:
-
-- Versão mínima do Android.
-- Contrato detalhado da API JNI.
-- Formatos de importação e exportação de modelos.
-- Detalhamento do schema binário `.bin`.
-- Arquitetura do viewport 3D.
-- Ferramentas de edição e inspeção de malhas.
-- Fluxo de texturização e formatos de imagem.
-- Interface de visualização e edição de UVs.
-
-## Roadmap inicial
-
-- [x] Definir o nome **X3D Editor**.
-- [x] Definir a orientação horizontal como padrão.
-- [x] Escolher Material Design como direção visual.
-- [x] Definir a lista de projetos como tela inicial.
-- [x] Escolher xatlas para geração de UVs e ilhas.
-- [ ] Especificar o fluxo de criação e gerenciamento de projetos.
-- [x] Definir Android como plataforma exclusiva.
-- [x] Escolher formato binário `.bin` como formato interno desde o início.
-- [x] Definir a extensão `.bin` e a estrutura básica do contêiner.
-- [ ] Definir a estrutura de diretórios dos projetos.
-- [ ] Especificar a área de edição e o viewport 3D.
-- [x] Definir Java/Kotlin para interface e C++ para backend.
-- [x] Escolher Assimp para facilitar a importação/exportação de modelos.
-- [ ] Planejar a integração técnica do xatlas e Assimp.
-- [ ] Especificar as ferramentas de texturização.
+Os critérios de aceitação de cada etapa estão descritos na [especificação mestre](docs/specification-v1.0.md).
 
 ## Status
 
-**Em planejamento — definições iniciais em andamento.**
+**Em planejamento — escopo funcional da versão 1.0 consolidado; implementação e validação técnica pendentes.**
 
-As decisões e especificações serão mantidas neste repositório à medida que o projeto evoluir.
+O status de implementação deve ser atualizado somente quando houver código e testes que comprovem a conclusão dos critérios de aceitação.
