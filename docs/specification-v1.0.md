@@ -1,560 +1,560 @@
-# X3D Editor 1.0 — Especificação técnica mestre e plano de desenvolvimento
+# X3D Editor 1.0 — Master Technical Specification and Development Roadmap
 
-> **Status:** especificação funcional consolidada; implementação ainda não iniciada ou não verificada por este documento.  
-> **Plataforma:** Android, orientação horizontal.  
-> **Formato nativo:** X3D, extensão `.bin`.  
-> **API gráfica:** Vulkan 1.1.  
-> **Última revisão:** 2026-11-20.
+> **Status:** Functional scope consolidated; implementation has not been started or is not verified by this document.  
+> **Platform:** Android, landscape orientation.  
+> **Native format:** X3D, `.bin` extension.  
+> **Graphics API:** Vulkan 1.1.  
+> **Last revised:** 2026-11-20.
 
-Este documento reúne as decisões aprovadas para a versão 1.0 e estabelece uma sequência de desenvolvimento. Ele é a referência de escopo do produto; não substitui as especificações detalhadas de cada subsistema nem declara recursos como implementados.
+This document consolidates the decisions approved for version 1.0 and defines a development sequence. It is the product scope reference; it does not replace detailed subsystem specifications or claim that any feature has been implemented.
 
-## 1. Objetivo e princípios
+## 1. Purpose and principles
 
-O X3D Editor é um editor de modelagem 3D exclusivo para Android. A versão 1.0 deve oferecer um fluxo confiável de criação, edição, importação, exportação e armazenamento de cenas e malhas.
+X3D Editor is a 3D modeling editor exclusively for Android. Version 1.0 aims to provide a reliable workflow for creating, editing, importing, exporting, and storing scenes and meshes.
 
-Princípios orientadores:
+Guiding principles:
 
-- Priorizar estabilidade, desempenho e previsibilidade em dispositivos móveis.
-- Manter a interface responsiva, sem executar operações pesadas na thread principal.
-- Separar interface Android, lógica do editor, dados da cena e renderização.
-- Evitar cópias integrais e alocações desnecessárias de geometria.
-- Preservar projetos existentes durante salvamentos e falhas.
-- Implementar primeiro uma base de modelagem sólida; recursos de texturização e animação ficam fora do escopo 1.0.
-- Tratar limitações dos formatos externos explicitamente, sem prometer conversões sem perda quando o formato de destino não comportar os dados.
+- Prioritize stability, performance, and predictable behavior on mobile devices.
+- Keep the interface responsive; heavy operations must not run on the main thread.
+- Separate the Android UI, editor logic, scene data, and rendering.
+- Avoid unnecessary full copies and allocations of geometry data.
+- Preserve existing projects during saves and failures.
+- Build a solid modeling foundation first; texturing and animation features are outside the 1.0 scope.
+- Explicitly handle limitations of external formats. Do not promise lossless conversion when the target format cannot represent the source data.
 
-## 2. Escopo funcional da versão 1.0
+## 2. Version 1.0 functional scope
 
-### 2.1 Plataforma e interface
+### 2.1 Platform and interface
 
-- Android exclusivo, orientação horizontal (*landscape*).
-- Interface Material Design; a versão específica da biblioteca visual será escolhida na implementação.
-- Tema escuro padrão; temas claro e sistema também disponíveis.
-- Idiomas: Português (Brasil), Inglês e Espanhol, com troca sem reiniciar.
-- Tamanhos de fonte: Pequeno, Médio (padrão) e Grande.
-- Armazenamento padrão no espaço privado do aplicativo.
-- Importação e exportação de arquivos pelo Android Storage Access Framework (SAF), sem exigir permissão ampla de armazenamento.
+- Android only, in landscape orientation.
+- Material Design interface; the specific UI library version will be selected during implementation.
+- Dark theme by default; light and system themes are also available.
+- Languages: Portuguese (Brazil), English, and Spanish, switchable without restarting.
+- Font sizes: Small, Medium (default), and Large.
+- App-private storage as the default project location.
+- File import and export through the Android Storage Access Framework (SAF), without requiring broad storage permissions.
 
-### 2.2 Gerenciador de projetos
+### 2.2 Project manager
 
-A tela inicial terá barra lateral fixa e grade de projetos. Cada cartão apresentará miniatura, nome e data/hora da última modificação, além de menu contextual para renomear ou excluir. Abrir será feito ao tocar no cartão.
+The home screen has a fixed sidebar and a project grid. Each card displays a thumbnail, project name, and last-modified date/time, plus a context menu for renaming or deleting. Opening a project is done by tapping its card.
 
-- Novo projeto abre diálogo com o nome obrigatório.
-- Criar abre diretamente a tela de modelagem.
-- Excluir exige confirmação e remove os arquivos associados ao projeto.
-- Miniaturas são imagens previamente geradas, armazenadas na pasta do projeto e carregadas sob demanda.
-- Projetos sem miniatura usam imagem padrão.
-- A listagem não deve carregar geometria nem desserializar arquivos X3D apenas para exibir cartões.
+- New Project opens a dialog with a required project-name field.
+- Create opens the modeling screen directly.
+- Delete requires confirmation and removes the project's associated files.
+- Thumbnails are pre-generated images stored in the project folder and loaded on demand.
+- Projects without thumbnails use a default image.
+- The project list must not load geometry or deserialize X3D files just to display cards.
 
-Configurações incluem Aparência, Idioma, Armazenamento e Sobre. Armazenamento apresenta quantidade de projetos, espaço ocupado e cache/miniaturas; limpar cache não remove projetos nem arquivos originais. Sobre apresenta versões do aplicativo e formato, bibliotecas, licenças e repositório.
+Settings include Appearance, Language, Storage, and About. Storage displays project count, occupied space, and cache/thumbnail usage; clearing the cache must not remove projects or original files. About displays app and format versions, libraries, licenses, and repository information.
 
-### 2.3 Tela de modelagem
+### 2.3 Modeling screen
 
-A viewport é a área central. A barra superior contém voltar ao gerenciador, salvar, desfazer, refazer e configurações. A saída com alterações não salvas exige confirmação.
+The viewport is the central area. The top bar contains navigation back to the project manager, Save, Undo, Redo, and Settings. Leaving with unsaved changes requires confirmation.
 
-A lateral esquerda possui as categorias Modelagem e Adicionar. Os painéis laterais são recolhíveis; a hierarquia abre sobreposta pela direita. A barra inferior é contextual e contém Posição, Rotação e Escala. Não haverá painel visual de histórico na versão 1.0.
+The left sidebar contains the Modeling and Add categories. Side panels are collapsible; the hierarchy panel opens as an overlay from the right. The bottom bar is contextual and contains Position, Rotation, and Scale. There is no visual history panel in version 1.0.
 
-**Adicionar:** primitivas (incluindo cubo, esfera e cilindro), Empty/nó de posição, câmera, luz e importação de modelo.
+**Add:** primitives (including cube, sphere, and cylinder), Empty/position node, camera, light, and model import.
 
-**Modelagem:** modos exclusivos Objeto (padrão), Vértices, Arestas e Faces. Ferramentas:
-- Geometria: Extrude, Inset e Bevel.
-- Topologia: Loop Cut, Merge e Subdivide.
-- Outras: Delete e Move Pivot.
+**Modeling:** exclusive modes Object (default), Vertex, Edge, and Face. Tools:
+- Geometry: Extrude, Inset, and Bevel.
+- Topology: Loop Cut, Merge, and Subdivide.
+- Other: Delete and Move Pivot.
 
-As ferramentas terão parâmetros contextuais e pré-visualização temporária quando aplicável. Confirmar aplica a operação; cancelar descarta o preview sem modificar a geometria original.
+Tools expose contextual parameters and temporary previews where applicable. Confirm applies the operation; Cancel discards the preview without modifying the original geometry.
 
-### 2.4 Seleção
+### 2.4 Selection
 
-- Seleção individual e múltipla por controle específico.
-- Seleção retangular: arrastar esquerda→direita seleciona elementos totalmente contidos; direita→esquerda seleciona elementos contidos ou cruzados.
-- A seleção por área respeita o modo ativo e pode ser combinada com seleção múltipla.
-- Toque em vazio limpa a seleção.
-- Hierarquia e viewport permanecem sincronizadas.
-- Objetos selecionados usam contorno laranja; foco/hover usa azul; componentes têm destaque próprio.
-- O objeto ativo deve ser distinguível dos demais itens da seleção múltipla.
+- Single selection and multi-selection through a dedicated control.
+- Box selection: dragging left-to-right selects only fully enclosed elements; dragging right-to-left selects enclosed or intersected elements.
+- Box selection respects the active mode and can be combined with multi-selection.
+- Tapping empty space clears the selection.
+- Hierarchy and viewport selection remain synchronized.
+- Selected objects use an orange outline; hover/focus uses blue; components have their own highlight.
+- The active object must be visually distinguishable from other items in a multi-selection.
 
-### 2.5 Transformações e unidades
+### 2.5 Transformations and units
 
-- Manipuladores visuais e campos numéricos sincronizados em tempo real.
-- Posição, rotação e escala na barra inferior.
-- Coordenadas Global e Local; Global é o padrão.
-- Posição em unidades do mundo, rotação exibida em graus e escala por eixo.
-- Bloqueio de escala uniforme.
-- Snap ativável/desativável, inicialmente com posição 0,1 m, rotação 15° e escala 0,1; incrementos configuráveis.
-- Restrição por eixo X/Y/Z, por plano XY/XZ/YZ ou livre.
-- Precisão de exibição configurável: 2, 3, 4 ou 6 casas decimais; padrão 3.
-- Valores internos de posição, rotação e escala usam float32/quaternion conforme a arquitetura. Alterar unidade muda apenas a apresentação, não a geometria.
-- Unidades de exibição: metros, centímetros e milímetros.
+- Visual manipulators and numeric fields remain synchronized in real time.
+- Position, Rotation, and Scale are in the bottom bar.
+- Global and Local coordinates; Global is the default.
+- Position uses world units, rotation is displayed in degrees, and scale is edited per axis.
+- Uniform scale lock.
+- Snap can be enabled or disabled. Initial increments: position 0.1 m, rotation 15°, and scale 0.1; increments are configurable.
+- Axis constraints X/Y/Z, plane constraints XY/XZ/YZ, or free movement.
+- Configurable display precision: 2, 3, 4, or 6 decimal places; default is 3.
+- Internal position, rotation, and scale values use float32/quaternions according to the architecture. Changing units affects display only, not geometry.
+- Display units: meters, centimeters, and millimeters.
 
-Move Pivot é distinto de Empty: altera a origem/pivô sem deslocar visualmente a geometria. Modos: mover livremente, centralizar na geometria e origem do mundo.
+Move Pivot is distinct from Empty: it changes the object's origin/pivot without visually moving its geometry. Modes: move freely, center on geometry, and world origin.
 
-### 2.6 Operações de malha
+### 2.6 Mesh operations
 
-Todas as oito ferramentas estão no escopo 1.0:
+All eight tools are included in version 1.0:
 
-| Ferramenta | Comportamento mínimo |
+| Tool | Minimum behavior |
 |---|---|
-| Extrude | Extrusão de faces/regiões selecionadas; distância e modo de extrusão |
-| Inset | Contorno interno; espessura e opção de contorno individual |
-| Bevel | Chanfrar arestas/vértices; largura, segmentos e limite por ângulo |
-| Loop Cut | Inserir cortes seguindo a topologia; quantidade e posicionamento |
-| Merge | Unir vértices; centro, último selecionado ou distância |
-| Subdivide | Dividir arestas/faces; número de subdivisões |
-| Delete | Remover objetos ou componentes conforme o modo de seleção |
-| Move Pivot | Alterar pivô sem deslocamento visual da geometria |
+| Extrude | Extrude selected faces/regions; distance and extrusion mode |
+| Inset | Create an inner boundary; thickness and individual inset option |
+| Bevel | Chamfer edges/vertices; width, segments, and angle limit |
+| Loop Cut | Insert cuts following topology; count and placement |
+| Merge | Merge selected vertices; center, last selected, or distance |
+| Subdivide | Split edges/faces; subdivision count |
+| Delete | Remove objects or components according to selection mode |
+| Move Pivot | Change the pivot without visually moving geometry |
 
-Operações confirmadas integram o Undo/Redo. A implementação deve validar a topologia e impedir referências pendentes ou dados inválidos.
+Confirmed operations are integrated with Undo/Redo. The implementation must validate topology and prevent dangling references or invalid data.
 
-### 2.7 Modificadores
+### 2.7 Modifiers
 
-A pilha de modificadores (Modifier Stack) estará disponível na versão 1.0, com **Mirror** como único modificador inicial.
+The Modifier Stack is included in version 1.0, with **Mirror** as the only initial modifier.
 
 Mirror:
-- Eixos X, Y e Z.
-- Pré-visualização não destrutiva.
-- Atualização quando a geometria original mudar.
-- Ativar/desativar e aplicar definitivamente.
-- Clipping na linha central e soldagem de vértices próximos ao plano de simetria.
-- Ordem editável na pilha, preparada para futuros modificadores.
+- X, Y, and Z axes.
+- Non-destructive preview.
+- Updates when the source geometry changes.
+- Enable/disable and apply permanently.
+- Clipping at the center line and welding of vertices near the symmetry plane.
+- Editable stack order, ready for future modifiers.
 
-Bevel Modifier e Subdivision Surface ficam para versões futuras. A ferramenta destrutiva Bevel continua incluída na versão 1.0.
+Bevel Modifier and Subdivision Surface are deferred to future versions. The destructive Bevel tool remains included in version 1.0.
 
-### 2.8 Cena e hierarquia
+### 2.8 Scene and hierarchy
 
-A cena utiliza Scene Graph hierárquico. Nós possuem identificador único, nome, transformação local, pai, filhos e componentes opcionais.
+The scene uses a hierarchical Scene Graph. Nodes have a unique identifier, name, local transform, parent, children, and optional components.
 
-Componentes previstos: Mesh, Camera, Light e Empty. Empty não contém geometria e pode representar referências como pontos de acoplamento. A transformação global é derivada da hierarquia.
+Planned components: Mesh, Camera, Light, and Empty. Empty has no geometry and can represent references such as attachment points. Global transforms are derived from the hierarchy.
 
-- IDs persistentes de nós: uint64.
-- Referências internas usam IDs, nunca nomes.
-- Transformação local: posição float32×3, quaternion float32×4 (XYZW) e escala float32×3.
-- Matriz global calculada pelo motor quando necessária.
-- Transform Dirty Flags propagam invalidação aos descendentes e evitam recomputações desnecessárias.
-- Sistema destro (*Right-Handed*), Y vertical, Z negativo frontal.
-- UI apresenta ângulos em graus; motor usa radianos quando trabalhar com ângulos e quaternions internamente.
+- Persistent node IDs: uint64.
+- Internal references use IDs, never names.
+- Local transform: position float32×3, quaternion float32×4 (XYZW), and scale float32×3.
+- Global matrices are calculated by the engine when needed.
+- Transform Dirty Flags propagate invalidation to descendants and avoid unnecessary recomputation.
+- Right-handed coordinate system, Y-up, negative Z forward.
+- The UI displays angles in degrees; the engine uses radians where working with angles and quaternions internally.
 
-### 2.9 Câmeras e navegação
+### 2.9 Cameras and navigation
 
-A câmera de navegação da viewport é independente das câmeras da cena e usa modelo orbital (Orbit Camera), com Target, distância, rotação horizontal/vertical, zoom e pan.
+The viewport navigation camera is independent of scene cameras and uses an Orbit Camera model with Target, distance, horizontal/vertical rotation, zoom, and pan.
 
-Gestos padrão:
-- Um dedo: orbitar.
-- Pinça com dois dedos: zoom.
-- Dois dedos movendo juntos: pan.
+Default gestures:
+- One finger: orbit.
+- Two-finger pinch: zoom.
+- Two fingers moving together: pan.
 
-Controles rápidos: enquadrar tudo, enquadrar selecionado e restaurar câmera. Projeções Perspective e Orthographic. Sensibilidade de rotação, zoom e pan configurável; distância mínima/máxima e limite de rotação vertical configuráveis.
+Quick controls: frame all, frame selected, and restore camera. Perspective and Orthographic projections. Rotation, zoom, and pan sensitivity are configurable; minimum/maximum distance and vertical rotation limits are configurable.
 
-Câmeras da cena: múltiplas câmeras, criar, renomear, excluir, definir ativa, visualizar através da câmera, ajustar FOV/perspectiva e planos Near/Far.
+Scene cameras: multiple cameras; create, rename, delete, set active, view through camera, adjust FOV/perspective, and set Near/Far planes.
 
-### 2.10 Luzes, viewport e apresentação
+### 2.10 Lights, viewport, and presentation
 
-Luzes de cena: Point, Directional e Spot, com cor, intensidade, transformação e parâmetros específicos. Gizmos permanecem visíveis mesmo com a luz desativada. A iluminação auxiliar da viewport é independente da cena, ativa por padrão em Solid, não é objeto e não é salva no projeto.
+Scene lights: Point, Directional, and Spot, with color, intensity, transform, and type-specific parameters. Gizmos remain visible even when a light is disabled. Viewport auxiliary lighting is independent of the scene, enabled by default in Solid mode, is not a scene object, and is not saved in the project.
 
-Iluminação auxiliar de três pontos: Key, Fill e Rim. Modos de viewport: Solid, Wireframe, Wireframe + Solid e Flat Shading. Fundo: cinza escuro uniforme, gradiente escuro ou grade 3D com horizonte/eixos; grade e eixos podem ser ocultados independentemente.
+Three-point auxiliary lighting: Key, Fill, and Rim. Viewport modes: Solid, Wireframe, Wireframe + Solid, and Flat Shading. Background options: uniform dark gray, dark gradient, or 3D grid with horizon/axes; grid and axes can be hidden independently.
 
-Recursos gráficos:
-- Sombras em tempo real via Shadow Mapping. CSM para Directional; mapas convencionais para Point e Spot.
+Graphics features:
+- Real-time shadows via Shadow Mapping. CSM for Directional lights; conventional shadow maps for Point and Spot lights.
 - SSAO.
-- MSAA: desligado, 2x ou 4x; 4x é o padrão desejado, condicionado ao suporte do dispositivo.
-- FXAA como opção de pós-processamento.
-- Tone Mapping e Gamma Correction.
-- Perfis Baixo, Médio, Alto e Personalizado; efeitos configuráveis individualmente.
-- Detecção inicial das capacidades Vulkan e recomendação de perfil. Usuário pode alterar o perfil depois.
+- MSAA: disabled, 2x, or 4x; 4x is the desired default, subject to device support.
+- FXAA as a post-processing option.
+- Tone Mapping and Gamma Correction.
+- Low, Medium, High, and Custom profiles; effects can be configured individually.
+- Initial Vulkan capability detection and profile recommendation. Users can change the profile later.
 
-A qualidade de sombras oferece Desativada, Baixa, Média e Alta; Média é o padrão proposto. A implementação deve respeitar limites e formatos realmente suportados pelo dispositivo, com fallback seguro.
+Shadow quality options: Disabled, Low, Medium, and High; Medium is the proposed default. Implementation must respect the limits and formats actually supported by the device and provide safe fallbacks.
 
-### 2.11 Materiais e texturas
+### 2.11 Materials and textures
 
-A versão 1.0 inclui apenas materiais básicos para visualização:
-- Cor base por objeto/material.
-- Material padrão.
-- Parâmetros básicos de iluminação.
-- Opacidade básica.
-- Exibição de cores no modo Solid.
+Version 1.0 includes basic materials for viewport display only:
+- Base color per object/material.
+- Default material.
+- Basic lighting parameters.
+- Basic opacity.
+- Color display in Solid mode.
 
-Não inclui editor PBR avançado, texturização ou carregamento/edição de texturas. A estrutura de dados deve ser compatível com evolução futura, sem expor funcionalidades não implementadas.
+There is no advanced PBR editor, texturing workflow, or texture loading/editing. The data structures should allow future evolution without exposing unimplemented features.
 
-### 2.12 Importação e exportação
+### 2.12 Import and export
 
-Formatos prioritários: glTF/GLB, FBX, OBJ e DAE (COLLADA), usando Assimp como biblioteca principal.
+Priority formats: glTF/GLB, FBX, OBJ, and DAE (COLLADA), using Assimp as the primary library.
 
-Fluxo: **modelo externo → importador/normalização → cena X3D → exportador → modelo externo**.
+Workflow: **external model → importer/normalization → X3D scene → exporter → external model**.
 
-Regras:
-- Importar a cena inteira ou elementos selecionados quando viável.
-- Preservar hierarquia, transformações e geometria sempre que o formato permitir.
-- Converter coordenadas e unidades quando necessário.
-- Triangular a geometria quando exigido pela representação interna.
-- Apresentar avisos para atributos, componentes ou materiais que não possam ser preservados.
-- Validar individualmente cada exportador e as capacidades da versão de Assimp integrada.
-- Exibir progresso e permitir cancelamento seguro em operações longas.
+Rules:
+- Import the entire scene or selected elements where feasible.
+- Preserve hierarchy, transforms, and geometry whenever the format allows it.
+- Convert coordinates and units when necessary.
+- Triangulate geometry when required by the internal representation.
+- Warn about attributes, components, or materials that cannot be preserved.
+- Validate each exporter and the capabilities of the integrated Assimp version individually.
+- Show progress and allow safe cancellation of long-running operations.
 
-Não prometer round-trip sem perda entre formatos com capacidades diferentes.
+Do not promise lossless round-tripping between formats with different capabilities.
 
-### 2.13 Salvamento, projetos e recuperação
+### 2.13 Saving, projects, and recovery
 
-Salvamento manual e automático configurável. Opções de autosave: desativado, 1, 3, 5, 10 ou 15 minutos. Indicador de alterações não salvas.
+Manual saving and configurable autosave. Autosave options: disabled, 1, 3, 5, 10, or 15 minutes. Show an unsaved-changes indicator.
 
-A gravação deve preservar o arquivo anterior até a nova gravação estar completa: temporário exclusivo no mesmo diretório, escrita integral, flush/sincronização, fechamento e rename atômico quando suportado. Falhas não podem truncar o projeto válido anterior.
+Saving must preserve the previous file until the new file has been fully written: create a unique temporary file in the same directory, write all data, flush/synchronize, close, and atomically rename when supported. Failures must not truncate the previous valid project.
 
-Recuperação local após encerramento inesperado; oferecer ao usuário a possibilidade de recuperar a versão encontrada. O histórico completo de Undo/Redo não precisa ser persistido no arquivo principal.
+Local recovery after an unexpected shutdown; offer the user the option to recover the discovered version. The full Undo/Redo history does not need to be persisted in the main project file.
 
-### 2.14 Desempenho
+### 2.14 Performance
 
-Não haverá limite artificial fixo de vértices ou faces. O limite prático será determinado por memória, capacidade do dispositivo e estabilidade. O editor deverá:
-- Monitorar pressão de memória e avisar antes de operações de risco.
-- Atualizar buffers GPU incrementalmente.
-- Evitar cópias integrais desnecessárias.
-- Processar operações demoradas fora da UI e da render thread.
-- Liberar recursos ao remover objetos/fechar projetos.
-- Implementar Frustum Culling.
-- Limitar operações concorrentes sobre a mesma malha.
-- Não iniciar sistemas complexos de LOD ou streaming de geometria na 1.0.
+There is no artificial fixed vertex or face limit. Practical limits are determined by memory, device capability, and stability. The editor must:
+- Monitor memory pressure and warn before risky operations.
+- Update GPU buffers incrementally.
+- Avoid unnecessary full copies.
+- Run long operations outside the UI and render threads.
+- Release resources when objects are removed or projects are closed.
+- Implement Frustum Culling.
+- Limit concurrent operations on the same mesh.
+- Defer complex LOD systems and geometry streaming beyond version 1.0.
 
-## 3. Arquitetura técnica
+## 3. Technical architecture
 
-### 3.1 Camadas e módulos
+### 3.1 Layers and modules
 
-**Android / Java ou Kotlin**
-- Interface, menus, diálogos, configurações, ciclo de vida e SAF.
-- A decisão entre Java, Kotlin ou ambos permanece para a fase de implementação; JNI é obrigatório para a comunicação com o backend nativo.
+**Android / Java or Kotlin**
+- UI, menus, dialogs, settings, lifecycle, and SAF.
+- The choice between Java, Kotlin, or both remains open for the implementation phase; JNI is required for communication with the native backend.
 
-**Backend C++**
-- `Core`: ciclo de vida, serviços comuns e coordenação.
-- `Device`: GPU, propriedades/limites Vulkan, extensões, formatos, seleção e diagnóstico do dispositivo.
-- `Graphics`: Vulkan, renderização, recursos e shaders.
-- `Geometry`: dados de malha, Half-Edge Mesh e operações de modelagem.
-- `Scene`: Scene Graph, transformações, câmeras e luzes.
-- `ImportExport`: Assimp e conversão.
-- `Project`: leitura, gravação, versão e verificações de integridade X3D.
-- `Editor`: seleção, ferramentas e comandos.
-- `Logger`: logs centralizados.
-- `Diagnostics`: diagnóstico e Crash Reports locais.
+**C++ backend**
+- `Core`: lifecycle, shared services, and coordination.
+- `Device`: GPU identification, Vulkan properties/limits, extensions, formats, device selection, and diagnostics.
+- `Graphics`: Vulkan, rendering, resources, and shaders.
+- `Geometry`: mesh data, Half-Edge Mesh, and modeling operations.
+- `Scene`: Scene Graph, transforms, cameras, and lights.
+- `ImportExport`: Assimp integration and conversion.
+- `Project`: X3D reading, writing, versioning, and integrity checks.
+- `Editor`: selection, tools, and commands.
+- `Logger`: centralized logging.
+- `Diagnostics`: diagnostics and local Crash Reports.
 
-### 3.2 Vulkan e pipeline
+### 3.2 Vulkan and rendering pipeline
 
-- API mínima: Vulkan 1.1.
-- Shaders-fonte: GLSL; distribuição/execução: SPIR-V (`.spv`).
-- Renderização em thread dedicada.
-- Render passes/etapas lógicas: Geometry, Lighting, Grid, Gizmo e Selection; a implementação pode usar subpasses ou passes separados conforme compatibilidade e custo real.
-- Gerenciador centralizado de recursos Vulkan: buffers, imagens, shaders, pipelines, descriptor sets e memória.
-- Geometria CPU editável separada dos buffers GPU de renderização.
-- Dados: posição float32×3, normal float32×3, UV float32×2 (preparado para futuro) e índices uint32.
-- Topologia editável: Half-Edge Mesh. A representação de renderização pode ser triangulada e derivada da topologia.
-- Sistema destro, Y para cima, frontal em Z negativo.
+- Minimum API: Vulkan 1.1.
+- Shader source: GLSL; compiled/distributed format: SPIR-V (`.spv`).
+- Dedicated rendering thread.
+- Logical render passes/stages: Geometry, Lighting, Grid, Gizmo, and Selection. Implementation may use subpasses or separate passes depending on compatibility and measured cost.
+- Centralized Vulkan resource manager: buffers, images, shaders, pipelines, descriptor sets, and memory.
+- Editable CPU geometry is separate from GPU rendering buffers.
+- Data: position float32×3, normal float32×3, UV float32×2 (future-ready), and uint32 indices.
+- Editable topology: Half-Edge Mesh. The rendering representation may be triangulated and derived from the topology.
+- Right-handed coordinate system, Y-up, negative Z forward.
 
-O ID Buffer usa identificadores inteiros de 32 bits, preferencialmente `VK_FORMAT_R32_UINT`, após verificar suporte. Os IDs persistentes de cena continuam uint64; IDs do picking são temporários e mapeados para os IDs reais. A seleção de objetos, vértices, arestas e faces usa GPU Picking. A passagem de picking deve ser independente de MSAA quando necessário para garantir leitura determinística de IDs inteiros; readback deve evitar bloquear a render thread.
+The ID Buffer uses 32-bit integer identifiers, preferably `VK_FORMAT_R32_UINT`, after support is verified. Persistent scene IDs remain uint64; picking IDs are temporary and mapped to persistent IDs. Object, vertex, edge, and face selection use GPU Picking. The picking pass must be independent of MSAA when needed to guarantee deterministic integer ID reads; readback must avoid blocking the render thread.
 
-Profundidade: preferir `VK_FORMAT_D24_UNORM_S8_UINT`; usar `VK_FORMAT_D32_SFLOAT` como alternativa se suportado. MSAA 4x é preferência padrão, mas deve ser negociado com as capacidades do dispositivo. Não assumir que todo formato, amostragem ou recurso opcional está presente em toda GPU Vulkan 1.1.
+Depth: prefer `VK_FORMAT_D24_UNORM_S8_UINT`; use `VK_FORMAT_D32_SFLOAT` as an alternative if supported. MSAA 4x is the preferred default but must be negotiated against device capabilities. Do not assume every format, sample count, or optional feature is available on every Vulkan 1.1 GPU.
 
-### 3.3 Pipeline de renderização e efeitos
+### 3.3 Rendering pipeline and effects
 
-Etapas lógicas:
+Logical stages:
 1. Geometry Pass.
 2. Lighting Pass.
 3. Grid Pass.
 4. Gizmo Pass.
 5. Selection Pass.
 
-Sombras: Shadow Mapping; CSM para luz direcional, mapas convencionais para Point/Spot. SSAO, FXAA, Tone Mapping e Gamma Correction são recursos previstos. Os efeitos devem ser ativáveis individualmente e agrupados nos perfis Baixo/Médio/Alto/Personalizado. A ordem exata e a combinação entre MSAA e FXAA devem ser validadas por qualidade e desempenho durante prototipagem.
+Shadows: Shadow Mapping; CSM for directional lights and conventional maps for Point/Spot lights. SSAO, FXAA, Tone Mapping, and Gamma Correction are planned features. Effects must be individually switchable and grouped into Low/Medium/High/Custom profiles. The exact order and combination of MSAA and FXAA must be validated for visual quality and performance during prototyping.
 
-### 3.4 Threads e sincronização
+### 3.4 Threads and synchronization
 
-- Main Thread Android: interface e eventos de entrada.
-- Render Thread: comandos gráficos e renderização Vulkan.
-- Thread Pool C++: importação/exportação, operações de geometria e cálculos pesados.
-- JNI: comandos agrupados e transferência de resultados; evitar chamadas excessivamente frequentes.
+- Android Main Thread: UI and input events.
+- Render Thread: graphics commands and Vulkan rendering.
+- C++ Thread Pool: import/export, geometry operations, and heavy calculations.
+- JNI: batched commands and result transfer; avoid excessively frequent calls.
 
-Thread Pool ajusta o número de workers aos recursos do dispositivo; não criar uma thread nova por operação. Operações devem ser canceláveis quando seguro. Uma malha não pode ser modificada simultaneamente por tarefas incompatíveis. Resultados são publicados/sincronizados com a Render Thread por mecanismo explícito de fila/eventos.
+The Thread Pool adapts its worker count to device resources; do not create a new thread for every operation. Operations should be cancellable when safe. A mesh must not be modified simultaneously by incompatible tasks. Results are published/synchronized with the Render Thread through an explicit queue/event mechanism.
 
-O ciclo de vida Android deve tratar pausa, retomada, recriação da superfície e perda do dispositivo Vulkan.
+The Android lifecycle must handle pause, resume, surface recreation, and Vulkan device loss.
 
-### 3.5 Memória
+### 3.5 Memory
 
-- RAII para propriedade e liberação de recursos C++.
-- Memory Pool para alocações frequentes.
-- Arena Allocator para dados temporários de operações.
-- GPU Allocator dedicado para memória Vulkan.
+- RAII for C++ resource ownership and release.
+- Memory Pool for frequent allocations.
+- Arena Allocator for temporary operation data.
+- Dedicated GPU Allocator for Vulkan memory.
 
-As estratégias devem ser medidas antes de serem otimizadas prematuramente. Ownership, duração e sincronização devem estar explícitos.
+Strategies must be measured before premature optimization. Ownership, lifetime, and synchronization must be explicit.
 
-### 3.6 Eventos, comandos e histórico
+### 3.6 Events, commands, and history
 
-Event System centralizado, com eventos iniciais: `ObjectSelected`, `ObjectCreated`, `ObjectDeleted`, `GeometryModified`, `TransformChanged`, `ProjectSaved` e `ProjectLoaded`. Deve ser seguro entre threads e controlar o ciclo de vida dos assinantes.
+A centralized Event System, initially including: `ObjectSelected`, `ObjectCreated`, `ObjectDeleted`, `GeometryModified`, `TransformChanged`, `ProjectSaved`, and `ProjectLoaded`. It must be thread-safe and manage subscriber lifetimes.
 
-Command System representa operações como `CreateObjectCommand`, `DeleteObjectCommand`, `TransformObjectCommand`, `ExtrudeCommand`, `BevelCommand` e `MirrorCommand`. Comandos devem oferecer execução e reversão quando aplicável.
+The Command System represents operations such as `CreateObjectCommand`, `DeleteObjectCommand`, `TransformObjectCommand`, `ExtrudeCommand`, `BevelCommand`, and `MirrorCommand`. Commands should support execution and reversal where applicable.
 
-Undo/Redo usa Command History, não cópias integrais de malhas por operação. O histórico é por projeto, com limite de memória configurável e descarte de comandos antigos. Comandos podem guardar dados geométricos necessários para reversão exata; não depender apenas de inversas matemáticas.
+Undo/Redo uses Command History rather than full mesh copies per operation. History is per project, has a configurable memory limit, and discards older commands when necessary. Commands may retain the geometry data required for exact reversal; do not rely only on mathematical inverse operations.
 
-### 3.7 Logs, erros e diagnóstico
+### 3.7 Logging, errors, and diagnostics
 
-Logger compartilhado com níveis TRACE, DEBUG, INFO, WARN, ERROR e FATAL; data/hora, módulo de origem, arquivos locais, rotação e limite de armazenamento.
+A shared Logger with TRACE, DEBUG, INFO, WARN, ERROR, and FATAL levels; timestamps, source module, local log files, rotation, and storage limits.
 
-Erros Vulkan:
-- Warning: recurso/função indisponível, continuar com fallback.
-- Error: operação falhou, manter projeto aberto quando seguro.
-- Fatal: falha crítica que exige interromper o motor gráfico.
+Vulkan error levels:
+- Warning: a feature/resource is unavailable; continue with a fallback.
+- Error: an operation failed; keep the project open when safe.
+- Fatal: a critical failure requiring the graphics engine to stop.
 
-Página Diagnóstico nas configurações: GPU/fabricante/modelo, versão Vulkan, driver, dados de memória reportados, perfil gráfico, últimos avisos/erros e exportação de logs.
+Settings include a Diagnostics page showing GPU/vendor/model, Vulkan version, driver, reported memory information, active graphics profile, recent warnings/errors, and log export.
 
-Crash Reports locais: motivo, módulo quando identificável, stack trace C++, dados Android, GPU/driver/Vulkan e últimas operações do Logger. Não enviar relatórios automaticamente.
+Local Crash Reports include the reason, responsible module when identifiable, native C++ stack trace, Android device data, GPU/driver/Vulkan information, and recent Logger events. Reports are not sent automatically.
 
-## 4. Recursos fora da versão 1.0
+## 4. Features outside version 1.0
 
-Planejados para versões futuras, sem compromisso de data:
-- Texturização e edição de UV.
-- Editor de materiais PBR avançado e carregamento de texturas.
+Planned for future versions, with no release-date commitment:
+- Texturing and UV editing.
+- Advanced PBR material editor and texture loading.
 - Bevel Modifier.
 - Subdivision Surface.
-- Animação e rigging.
-- Física/simulação.
+- Animation and rigging.
+- Physics/simulation.
 - Sculpting.
-- LOD automático e streaming avançado de geometria.
-- Edição colaborativa.
+- Automatic LOD and advanced geometry streaming.
+- Collaborative editing.
 
-A biblioteca xatlas já foi considerada para UV unwrapping em discussões anteriores, mas a geração/edição de UV e o fluxo de texturização não fazem parte do escopo funcional 1.0. A integração poderá ser retomada numa versão posterior.
+The xatlas library has been considered for UV unwrapping, but UV generation/editing and the texturing workflow are not part of the version 1.0 functional scope. Integration may be revisited in a future version.
 
-## 5. Compatibilidade e requisitos de dispositivo
+## 5. Compatibility and device requirements
 
-- Requisito gráfico mínimo: suporte a Vulkan 1.1.
-- Dispositivos sem Vulkan 1.1 não são compatíveis com a viewport 3D da versão 1.0.
-- Detectar GPU, driver, extensões, formatos, limites e amostras suportadas.
-- Recomendar perfil gráfico inicial; permitir alteração manual.
-- Testar principalmente GPUs Adreno e Mali, além de outros dispositivos Vulkan disponíveis.
-- Não assumir disponibilidade de recursos opcionais só pela versão da API.
-- Versão mínima do Android, ABIs, NDK, SDK e requisitos de memória ainda devem ser definidos antes da configuração final do projeto de build.
+- Minimum graphics requirement: Vulkan 1.1 support.
+- Devices without Vulkan 1.1 are not compatible with the version 1.0 3D viewport.
+- Detect GPU, driver, extensions, formats, limits, and supported sample counts.
+- Recommend an initial graphics profile; allow manual changes.
+- Test primarily on Adreno and Mali GPUs, as well as other available Vulkan devices.
+- Do not assume optional features are available solely because of the API version.
+- Minimum Android version, ABIs, NDK, SDK, and memory requirements must be defined before finalizing the build configuration.
 
-## 6. Compatibilidade e evolução do formato X3D
+## 6. X3D format compatibility and evolution
 
-O repositório já contém uma especificação independente do formato binário `.bin` em [data-format.md](data-format.md), com versão 1, cabeçalho, seções META/NODE/MESH/MATL/TEXR e testes em [format-v1-validation.md](format-v1-validation.md).
+The repository already contains an independent specification for the `.bin` binary format in [data-format.md](data-format.md), defining version 1, the header, META/NODE/MESH/MATL/TEXR sections, and tests in [format-v1-validation.md](format-v1-validation.md).
 
-**Essa especificação existente permanece a fonte de verdade para os bytes da versão 1 até que uma revisão formal seja aprovada.** Este documento mestre não altera retroativamente o schema.
+**That existing specification remains the source of truth for version 1 bytes until a formal revision is approved.** This master document does not retroactively change the schema.
 
-Há diferenças a resolver antes de congelar o formato usado pela aplicação:
-- O schema v1 atual representa referências de nós por índices de coleção, enquanto a arquitetura aprovada prevê IDs persistentes uint64.
-- O schema v1 atual não descreve explicitamente componentes Camera e Light, nem a pilha de modificadores.
-- A geometria persistida v1 é triangulada (posições/normais/UV0/índices); Half-Edge é a estrutura topológica editável em memória e ainda precisa de uma decisão de serialização.
-- A seção MATL/TEXR já prevê dados de materiais e referências de texturas, embora texturização esteja fora do escopo funcional 1.0.
-- O schema v1 não inclui submeshes nem múltiplos materiais por malha.
+The following differences must be resolved before freezing the format used by the application:
+- The current v1 schema represents node references using collection indices, while the approved architecture calls for persistent uint64 IDs.
+- The current v1 schema does not explicitly describe Camera and Light components or the modifier stack.
+- The persisted v1 geometry is triangulated (positions/normals/UV0/indices); Half-Edge is the editable in-memory topology and still needs a serialization decision.
+- MATL/TEXR already define material data and texture references, although texturing is outside the version 1.0 functional scope.
+- The v1 schema does not include submeshes or multiple materials per mesh.
 
-**Ação obrigatória na fase de formato:** elaborar uma matriz de compatibilidade entre os requisitos da cena e o schema v1; decidir se os requisitos podem ser representados por extensão compatível ou se exigem uma nova versão do formato. Não alterar a fixture canônica nem os testes v1 sem versionamento e decisão explícita. Leitores devem rejeitar versões não suportadas de forma controlada e preservar a possibilidade de migração futura.
+**Required action during the format phase:** create a compatibility matrix between scene requirements and schema v1; decide whether the requirements can be represented through a compatible extension or require a new format version. Do not change the canonical fixture or v1 tests without explicit versioning and a documented decision. Readers must reject unsupported versions in a controlled manner and preserve the possibility of future migration.
 
-## 7. Etapas de desenvolvimento
+## 7. Development stages
 
-As etapas abaixo são sequenciais por dependência. Algumas tarefas internas podem ocorrer em paralelo após os contratos de módulo estarem estáveis. Cada etapa termina com critérios verificáveis; não avançar apenas porque o código compila.
+The stages below are ordered by dependency. Some tasks may run in parallel after module contracts are stable. Each stage ends with verifiable acceptance criteria; do not advance merely because the code compiles.
 
-### Etapa 0 — Preparação e decisões de build
+### Stage 0 — Build preparation and decisions
 
-**Entregas**
-- Confirmar versão mínima do Android, SDK/NDK, ABI(s), toolchain C++ e linguagem da UI (Java, Kotlin ou combinação).
-- Definir estrutura de diretórios e convenções de código.
-- Configurar build Android e integração CMake/NDK.
-- Definir política de dependências e versões de Assimp.
-- Criar CI básico e documentação de compilação.
+**Deliverables**
+- Confirm minimum Android version, SDK/NDK, ABI(s), C++ toolchain, and UI language (Java, Kotlin, or both).
+- Define directory structure and coding conventions.
+- Configure the Android build and CMake/NDK integration.
+- Define dependency policy and Assimp versions.
+- Create basic CI and build documentation.
 
-**Aceitação**
-- Aplicativo Android vazio instala e inicia em dispositivo compatível.
-- Biblioteca nativa compila para cada ABI selecionada.
-- Dependências e versões estão fixadas e reproduzíveis.
+**Acceptance criteria**
+- An empty Android app installs and starts on a compatible device.
+- The native library builds for every selected ABI.
+- Dependencies and versions are pinned and reproducible.
 
-### Etapa 1 — Esqueleto do aplicativo e JNI
+### Stage 1 — Android application skeleton and JNI
 
-**Entregas**
-- Activity principal em landscape.
-- Navegação básica e tema escuro.
-- Biblioteca C++ carregada via JNI.
-- Contrato inicial de comandos/erros entre UI e backend.
-- Tratamento do ciclo de vida Android.
+**Deliverables**
+- Main Activity in landscape.
+- Basic navigation and dark theme.
+- C++ library loaded through JNI.
+- Initial command/error contract between UI and backend.
+- Android lifecycle handling.
 
-**Aceitação**
-- UI não bloqueia ao chamar operações nativas de teste.
-- JNI lida com erros sem crash.
-- Pausa/retomada não deixa threads ou recursos órfãos.
+**Acceptance criteria**
+- The UI does not block when calling test native operations.
+- JNI handles errors without crashing.
+- Pause/resume does not leave orphaned threads or resources.
 
-### Etapa 2 — Core, Logger, Device e diagnóstico inicial
+### Stage 2 — Core, Logger, Device, and initial diagnostics
 
-**Entregas**
-- Módulos Core, Logger e Device.
-- Coleta de propriedades Vulkan e identificação de GPU/driver.
-- Tratamento de Warning/Error/Fatal.
-- Logs locais com rotação.
-- Primeira tela de diagnóstico.
+**Deliverables**
+- Core, Logger, and Device modules.
+- Vulkan property collection and GPU/driver identification.
+- Warning/Error/Fatal handling.
+- Local logs with rotation.
+- First diagnostics screen.
 
-**Aceitação**
-- Dispositivo sem Vulkan 1.1 recebe mensagem clara e não tenta iniciar viewport incompatível.
-- Propriedades e limitações são registradas.
-- Erros simulados são classificados corretamente.
+**Acceptance criteria**
+- A device without Vulkan 1.1 receives a clear message and does not attempt to start an incompatible viewport.
+- Device properties and limitations are recorded.
+- Simulated errors are classified correctly.
 
-### Etapa 3 — Fundação Vulkan e viewport mínima
+### Stage 3 — Vulkan foundation and minimal viewport
 
-**Entregas**
-- Instância, dispositivo lógico, filas, swapchain e sincronização.
-- Render Thread dedicada.
-- Gestão de superfície e recriação após ciclo de vida.
-- Carregamento de SPIR-V.
-- Geometry Pass mínimo e desenho de uma primitiva.
-- Gerenciador de recursos Vulkan e Depth Buffer.
+**Deliverables**
+- Instance, logical device, queues, swapchain, and synchronization.
+- Dedicated Render Thread.
+- Surface management and recreation across lifecycle events.
+- SPIR-V loading.
+- Minimal Geometry Pass and rendering of one primitive.
+- Vulkan resource manager and Depth Buffer.
 
-**Aceitação**
-- Renderizar continuamente sem bloquear a UI.
-- Redimensionamento/recriação da superfície funciona.
-- Recursos são liberados sem vazamentos conhecidos.
-- Fallbacks de formatos/amostras são testados.
+**Acceptance criteria**
+- Continuous rendering without blocking the UI.
+- Surface resize/recreation works.
+- Resources are released without known leaks.
+- Format/sample fallbacks are tested.
 
-### Etapa 4 — Scene Graph e transformações
+### Stage 4 — Scene Graph and transforms
 
-**Entregas**
-- Nós, IDs, componentes e hierarquia.
-- Transformações locais e globais com quaternion.
+**Deliverables**
+- Nodes, IDs, components, and hierarchy.
+- Local and global transforms using quaternions.
 - Dirty Flags.
-- Câmera orbital, Perspective/Orthographic e gizmo XYZ.
-- Câmeras e luzes de cena básicas.
+- Orbit camera, Perspective/Orthographic projection, and XYZ gizmo.
+- Basic scene cameras and lights.
 
-**Aceitação**
-- Hierarquias profundas e alterações de pai atualizam matrizes corretamente.
-- Não há ciclos ou referências inválidas.
-- Gestos de órbita, zoom e pan funcionam em tela touch.
+**Acceptance criteria**
+- Deep hierarchies and parent changes update matrices correctly.
+- No cycles or invalid references are allowed.
+- Orbit, zoom, and pan gestures work on a touch screen.
 
-### Etapa 5 — Geometria e topologia
+### Stage 5 — Geometry and topology
 
-**Entregas**
-- Mesh CPU e buffers GPU separados.
+**Deliverables**
+- Separate CPU Mesh data and GPU buffers.
 - Half-Edge Mesh.
-- Conversão de topologia para buffers triangulados.
-- Normais, índices e atributos.
-- Atualização incremental de buffers.
+- Conversion from topology to triangulated buffers.
+- Normals, indices, and attributes.
+- Incremental buffer updates.
 
-**Aceitação**
-- Criar, editar e renderizar malhas de teste.
-- Validar conectividade e invariantes topológicos após operações.
-- Alterar parte da malha não exige reconstrução completa sem necessidade.
+**Acceptance criteria**
+- Create, edit, and render test meshes.
+- Validate connectivity and topology invariants after operations.
+- Editing part of a mesh does not trigger a full rebuild unless necessary.
 
-### Etapa 6 — Seleção, ferramentas e Command History
+### Stage 6 — Selection, tools, and Command History
 
-**Entregas**
-- GPU Picking de objetos e componentes com ID Buffer inteiro.
-- Seleção individual, múltipla e retangular.
-- Modos Object/Vertex/Edge/Face.
-- Oito ferramentas de modelagem.
-- Preview temporário e confirmação/cancelamento.
-- Command System e Undo/Redo por projeto.
+**Deliverables**
+- GPU Picking for objects and components using an integer ID Buffer.
+- Single, multi-, and box selection.
+- Object/Vertex/Edge/Face modes.
+- Eight modeling tools.
+- Temporary preview and confirm/cancel behavior.
+- Command System and per-project Undo/Redo.
 
-**Aceitação**
-- Seleção corresponde ao elemento sob o toque, inclusive com oclusão.
-- Seleção retangular segue as regras esquerda→direita/direita→esquerda.
-- Cada operação confirmada pode ser desfeita/refeita corretamente.
-- Cancelar preview não altera a malha original.
+**Acceptance criteria**
+- Selection matches the element under the touch, including occlusion cases.
+- Box selection follows the left-to-right/right-to-left rules.
+- Every confirmed operation can be undone/redone correctly.
+- Cancelling a preview does not modify the original mesh.
 
-### Etapa 7 — Modificadores
+### Stage 7 — Modifiers
 
-**Entregas**
+**Deliverables**
 - Modifier Stack.
-- Mirror não destrutivo em X/Y/Z.
-- Clipping e soldagem no plano.
-- Ativar, desativar, reordenar e aplicar.
+- Non-destructive Mirror on X/Y/Z.
+- Clipping and plane welding.
+- Enable, disable, reorder, and apply.
 
-**Aceitação**
-- Alterar a malha original atualiza o resultado espelhado.
-- Aplicar Mirror produz geometria equivalente ao preview.
-- Undo/Redo cobre edição e aplicação do modificador.
+**Acceptance criteria**
+- Editing the source mesh updates the mirrored result.
+- Applying Mirror produces geometry equivalent to the preview.
+- Undo/Redo covers modifier editing and application.
 
-### Etapa 8 — Projetos e formato X3D
+### Stage 8 — Projects and X3D format
 
-**Entregas**
-- Matriz de compatibilidade de requisitos versus schema v1.
-- Decisão documentada sobre manter/extender v1 ou criar nova versão.
-- Leitor/gravador e migração, se aplicável.
-- Validação estrutural e referências.
-- Salvamento atômico e recuperação.
-- Miniaturas e estrutura de diretórios do projeto.
+**Deliverables**
+- Requirements-versus-v1-schema compatibility matrix.
+- Documented decision to retain/extend v1 or create a new version.
+- Reader/writer and migration, if applicable.
+- Structural and reference validation.
+- Atomic saving and recovery.
+- Thumbnails and project directory structure.
 
-**Aceitação**
-- Fixtures e testes da versão suportada passam.
-- Round-trip preserva dados dentro das regras do formato.
-- Falhas de gravação preservam o arquivo anterior.
-- Projeto interrompido pode ser recuperado sem sobrescrever silenciosamente o original.
+**Acceptance criteria**
+- Fixtures and tests for the supported version pass.
+- Round-tripping preserves data within the format rules.
+- Save failures preserve the previous file.
+- Interrupted projects can be recovered without silently overwriting the original.
 
-### Etapa 9 — Importação e exportação
+### Stage 9 — Import and export
 
-**Entregas**
-- Integração Assimp.
-- glTF/GLB, FBX, OBJ e DAE.
-- Mapeamento de cena, geometria, materiais básicos e coordenadas.
-- Progresso, cancelamento e avisos de perda.
+**Deliverables**
+- Assimp integration.
+- glTF/GLB, FBX, OBJ, and DAE.
+- Scene, geometry, basic material, and coordinate mapping.
+- Progress, cancellation, and loss warnings.
 
-**Aceitação**
-- Corpus de arquivos de teste importa e exporta nos formatos declarados.
-- Erros e atributos não suportados são informados.
-- Testes de round-trip documentam perdas esperadas por formato.
+**Acceptance criteria**
+- A test corpus imports and exports in the declared formats.
+- Errors and unsupported attributes are reported.
+- Round-trip tests document expected losses for each format.
 
-### Etapa 10 — Interface completa e fluxo de trabalho
+### Stage 10 — Complete interface and workflow
 
-**Entregas**
-- Gerenciador de projetos.
-- Painéis, hierarquia, ferramentas, barra contextual e configurações.
-- Unidade/precisão, Snap, eixos e preferências.
-- SAF para importação/exportação.
-- Autosave, recuperação e diagnósticos/Crash Reports.
+**Deliverables**
+- Project manager.
+- Panels, hierarchy, tools, contextual bar, and settings.
+- Units/precision, Snap, axes, and preferences.
+- SAF import/export.
+- Autosave, recovery, diagnostics, and Crash Reports.
 
-**Aceitação**
-- Fluxo criar → modelar → salvar → fechar → reabrir funciona.
-- Preferências persistem.
-- Nenhuma operação pesada bloqueia a thread principal.
+**Acceptance criteria**
+- Create → model → save → close → reopen workflow works.
+- Preferences persist.
+- No heavy operation blocks the main thread.
 
-### Etapa 11 — Qualidade gráfica e otimização
+### Stage 11 — Graphics quality and optimization
 
-**Entregas**
-- Solid, Wireframe, Wireframe + Solid e Flat Shading.
-- Luz auxiliar de três pontos.
-- Sombras, CSM, SSAO, MSAA/FXAA, Tone Mapping e Gamma Correction.
-- Perfis gráficos.
-- Frustum Culling e otimização de memória/transferências.
+**Deliverables**
+- Solid, Wireframe, Wireframe + Solid, and Flat Shading.
+- Three-point auxiliary lighting.
+- Shadows, CSM, SSAO, MSAA/FXAA, Tone Mapping, and Gamma Correction.
+- Graphics profiles.
+- Frustum Culling and memory/transfer optimizations.
 
-**Aceitação**
-- Cada recurso opcional verifica suporte e possui fallback.
-- Perfis Baixo/Médio/Alto/Personalizado são consistentes.
-- Testes de desempenho e memória em GPUs diferentes documentam resultados e limitações.
+**Acceptance criteria**
+- Every optional feature checks device support and has a fallback.
+- Low/Medium/High/Custom profiles behave consistently.
+- Performance and memory tests on different GPUs document results and limitations.
 
-### Etapa 12 — Testes integrados, estabilidade e lançamento 1.0
+### Stage 12 — Integration testing, stability, and 1.0 release
 
-**Entregas**
-- Testes unitários, integração, regressão e dispositivos.
-- Testes prolongados de memória e renderização.
-- Testes de arquivos corrompidos, interrupção e recuperação.
-- Revisão de acessibilidade, tradução, licenças e créditos.
-- Documentação de usuário, notas de versão e checklist de publicação.
+**Deliverables**
+- Unit, integration, regression, and device tests.
+- Extended memory and rendering tests.
+- Corrupt-file, interruption, and recovery tests.
+- Accessibility, translation, license, and credits review.
+- User documentation, release notes, and publication checklist.
 
-**Aceitação**
-- Nenhum bloqueador conhecido em fluxos principais.
-- Sem perda de projeto nos cenários de falha cobertos.
-- Compatibilidade Vulkan 1.1 verificada nos dispositivos-alvo.
-- Todos os formatos anunciados passam pelo corpus de conformidade.
-- Critérios de desempenho e dispositivos mínimos são publicados antes do lançamento.
+**Acceptance criteria**
+- No known blockers remain in primary workflows.
+- No project loss occurs in the covered failure scenarios.
+- Vulkan 1.1 compatibility is verified on target devices.
+- All advertised formats pass the conformance corpus.
+- Performance criteria and minimum supported devices are published before release.
 
-## 8. Riscos e decisões que permanecem abertas
+## 8. Risks and remaining decisions
 
-Estes itens não impedem a especificação funcional, mas devem ser resolvidos nas etapas indicadas:
+These items do not block the functional specification but must be resolved in the indicated stages:
 
-1. **Build Android:** versão mínima do Android, SDK/NDK, ABIs e escolha Java/Kotlin — Etapa 0.
-2. **Formato X3D:** conciliar schema v1 com IDs uint64, componentes, modificadores e topologia — Etapa 8.
-3. **Vulkan:** recursos opcionais variam por GPU/driver; todos precisam de consulta e fallback — Etapas 2, 3 e 11.
-4. **Half-Edge e exportação:** formatos externos podem exigir triangulação e conversão; preservar a malha editável internamente e exportar uma representação compatível.
-5. **Autosave e SAF:** gravação atômica pode ter limitações diferentes em URIs SAF; definir fluxo seguro para armazenamento privado e exportação por SAF.
-6. **Threading:** geometria não pode ser alterada simultaneamente por ferramentas e workers; contratos de ownership e sincronização são obrigatórios.
-7. **Escopo de materiais:** somente materiais básicos na 1.0; não expor controles de texturização ainda não implementados.
+1. **Android build:** minimum Android version, SDK/NDK, ABIs, and Java/Kotlin choice — Stage 0.
+2. **X3D format:** reconcile schema v1 with uint64 IDs, components, modifiers, and topology — Stage 8.
+3. **Vulkan:** optional features vary by GPU/driver; all must be queried and have fallbacks — Stages 2, 3, and 11.
+4. **Half-Edge and export:** external formats may require triangulation/conversion; preserve editable internal topology and export a compatible representation.
+5. **Autosave and SAF:** atomic saving may have different limitations for SAF URIs; define a safe workflow for private storage and SAF export.
+6. **Threading:** geometry must not be modified simultaneously by tools and workers; ownership and synchronization contracts are mandatory.
+7. **Material scope:** only basic materials in 1.0; do not expose texturing controls that are not implemented.
 
-## 9. Critério de conclusão da versão 1.0
+## 9. Version 1.0 completion criteria
 
-A versão 1.0 estará pronta quando o usuário puder criar um projeto, importar um modelo, navegar e editar sua geometria com as ferramentas aprovadas, organizar a cena, usar Mirror, desfazer/refazer, salvar e recuperar o projeto, exportar para os formatos anunciados e trabalhar numa viewport Vulkan estável em dispositivos compatíveis.
+Version 1.0 is ready when users can create a project, import a model, navigate and edit its geometry with the approved tools, organize the scene, use Mirror, undo/redo, save and recover the project, export to the advertised formats, and work in a stable Vulkan viewport on compatible devices.
 
-A publicação depende de testes documentados, não apenas da conclusão das telas ou da compilação.
+Release depends on documented tests, not merely completed screens or a successful build.
 
-## 10. Documentos relacionados
+## 10. Related documents
 
 - [README](../README.md)
-- [Arquitetura tecnológica atual](architecture.md)
-- [Formato binário X3D v1](data-format.md)
-- [Testes de conformidade X3D v1](format-v1-validation.md)
+- [Current technology architecture](architecture.md)
+- [X3D v1 binary format](data-format.md)
+- [X3D v1 conformance tests](format-v1-validation.md)
 
 ---
 
-**Nota de governança:** alterações de escopo devem atualizar este documento. Alterações no layout binário devem atualizar a especificação do formato, sua versão e as fixtures/testes correspondentes. O status de cada etapa deve ser atualizado somente após evidência de implementação e critérios de aceitação atendidos.
+**Governance note:** Scope changes must update this document. Binary layout changes must update the format specification, its version, and the corresponding fixtures/tests. Stage status must only be updated when implementation evidence exists and acceptance criteria have been met.
