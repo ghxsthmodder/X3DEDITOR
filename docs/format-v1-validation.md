@@ -1,71 +1,70 @@
-# Testes de conformidade — formato X3D v1
+# X3D v1 Format Conformance Tests
 
-Este documento define os testes de conformidade para o leitor e gravador do formato binário. A fixture de referência é `tests/fixtures/v1-minimal.hex`.
+This document defines conformance tests for the binary format reader and writer. The reference fixture is `tests/fixtures/v1-minimal.hex`.
 
-## Fixture mínima
+## Minimal fixture
 
-A fixture contém 169 bytes e representa:
+The fixture is 169 bytes and represents:
 
-- Cabeçalho `X3D\0`, versão de formato 1 e cinco seções.
-- `META`: nome `Example`, descrição `Minimal X3D v1 fixture`, versão do projeto 1.0.0.
-- `NODE`: um nó chamado `Root`, sem pai e sem malhas; posição (0,0,0), quaternion identidade (0,0,0,1) e escala (1,1,1).
-- `MESH`, `MATL` e `TEXR`: coleções vazias.
+- Header `X3D\\0`, format version 1, and five sections.
+- `META`: name `Example`, description `Minimal X3D v1 fixture`, project version 1.0.0.
+- `NODE`: one node named `Root`, with no parent and no meshes; position (0,0,0), identity quaternion (0,0,0,1), and scale (1,1,1).
+- `MESH`, `MATL`, and `TEXR`: empty collections.
 
-A fixture é uma sequência hexadecimal sem endereços ou separadores semânticos. Espaços e quebras de linha são ignorados ao convertê-la em bytes.
+The fixture is a hexadecimal sequence without addresses or semantic separators. Whitespace and line breaks are ignored when converting it to bytes.
 
-## Testes positivos obrigatórios
+## Required positive tests
 
-| ID | Cenário | Resultado esperado |
+| ID | Scenario | Expected result |
 |---|---|---|
-| P-01 | Ler a fixture mínima | Aceitar e reconstruir exatamente os metadados e o nó descritos acima |
-| P-02 | Ler coleções vazias | Aceitar MESH, MATL e TEXR com contador zero |
-| P-03 | Round-trip da fixture | Ler e gravar novamente; produzir os mesmos 169 bytes |
-| P-04 | Seção desconhecida adicional, com tamanho válido | Ignorar o payload desconhecido e continuar a leitura |
-| P-05 | Nó com pai válido e referências válidas | Reconstruir a hierarquia e as associações corretamente |
-| P-06 | Malha com normais e UV0 habilitados | Ler os arrays de acordo com os bits 0 e 1 de attributeFlags |
-| P-07 | Material com referências de textura válidas | Resolver cada índice para o registro correto de TEXR |
+| P-01 | Read the minimal fixture | Accept and reconstruct exactly the metadata and node described above |
+| P-02 | Read empty collections | Accept MESH, MATL, and TEXR with a count of zero |
+| P-03 | Fixture round-trip | Read and write again; produce the same 169 bytes |
+| P-04 | Additional unknown section with a valid size | Skip the unknown payload and continue reading |
+| P-05 | Node with a valid parent and valid references | Reconstruct the hierarchy and associations correctly |
+| P-06 | Mesh with normals and UV0 enabled | Read arrays according to bits 0 and 1 of attributeFlags |
+| P-07 | Material with valid texture references | Resolve each index to the correct TEXR record |
 
-## Testes negativos obrigatórios
+## Required negative tests
 
-| ID | Cenário inválido | Resultado esperado |
+| ID | Invalid scenario | Expected result |
 |---|---|---|
-| N-01 | Magic diferente de `X3D\0` | Rejeitar |
-| N-02 | Versão de formato não suportada | Rejeitar com erro de versão |
-| N-03 | Cabeçalho truncado | Rejeitar |
-| N-04 | sectionCount incompatível com as seções disponíveis | Rejeitar |
-| N-05 | Uma das cinco seções obrigatórias ausente | Rejeitar |
-| N-06 | Seção conhecida duplicada | Rejeitar |
-| N-07 | size maior que os bytes restantes | Rejeitar sem leitura fora dos limites |
-| N-08 | Payload conhecido com bytes sobrando ou faltando | Rejeitar |
-| N-09 | String cujo tamanho ultrapassa o payload | Rejeitar |
-| N-10 | String UTF-8 inválida | Rejeitar |
-| N-11 | Contagem que causa overflow ou alocação além dos limites disponíveis | Rejeitar antes de alocar |
-| N-12 | parentIndex, meshIndices, materialIndex ou índice de textura fora do intervalo | Rejeitar |
-| N-13 | Hierarquia com ciclo ou nó como próprio pai | Rejeitar |
-| N-14 | attributeFlags com bits desconhecidos | Rejeitar |
-| N-15 | indexCount não múltiplo de três ou índice maior/igual a vertexCount | Rejeitar |
-| N-16 | metallic, roughness ou opacity fora de [0,1] | Rejeitar |
-| N-17 | Float NaN ou infinito em qualquer atributo | Rejeitar |
-| N-18 | Caminho absoluto ou caminho de textura que escape da pasta do projeto | Rejeitar |
-| N-19 | Bytes extras após a última seção | Rejeitar |
+| N-01 | Magic value differs from `X3D\\0` | Reject |
+| N-02 | Unsupported format version | Reject with a version error |
+| N-03 | Truncated header | Reject |
+| N-04 | sectionCount does not match available sections | Reject |
+| N-05 | One of the five required sections is missing | Reject |
+| N-06 | Known section appears more than once | Reject |
+| N-07 | size exceeds the remaining bytes | Reject without reading out of bounds |
+| N-08 | Known payload contains extra or missing bytes | Reject |
+| N-09 | String length exceeds the payload | Reject |
+| N-10 | Invalid UTF-8 string | Reject |
+| N-11 | Count causes overflow or allocation beyond available limits | Reject before allocation |
+| N-12 | parentIndex, meshIndices, materialIndex, or texture index is out of range | Reject |
+| N-13 | Hierarchy contains a cycle or a node is its own parent | Reject |
+| N-14 | attributeFlags contains unknown bits | Reject |
+| N-15 | indexCount is not divisible by three, or an index is greater than or equal to vertexCount | Reject |
+| N-16 | metallic, roughness, or opacity is outside [0,1] | Reject |
+| N-17 | Float NaN or infinity in any attribute | Reject |
+| N-18 | Absolute path or texture path escaping the project folder | Reject |
+| N-19 | Extra bytes after the final section | Reject |
 
-## Testes da gravação segura
+## Safe-save tests
 
-| ID | Simulação | Resultado esperado |
+| ID | Simulation | Expected result |
 |---|---|---|
-| S-01 | Gravação concluída e rename bem-sucedido | Novo arquivo substitui o anterior integralmente |
-| S-02 | Falha ao criar o temporário | Arquivo anterior permanece intacto |
-| S-03 | Falha durante a escrita ou flush | Temporário é descartado quando possível; destino anterior permanece intacto |
-| S-04 | Falha em fsync antes do rename | Não substituir o destino |
-| S-05 | Falha no rename | Retornar erro e preservar o destino anterior |
-| S-06 | Processo interrompido antes do rename | Arquivo de destino anterior continua válido; temporário órfão pode ser limpo posteriormente |
-| S-07 | Gravação em diretório sem permissão | Retornar erro sem truncar o arquivo anterior |
+| S-01 | Save completes and rename succeeds | New file fully replaces the previous file |
+| S-02 | Temporary file creation fails | Previous file remains intact |
+| S-03 | Write or flush fails | Temporary file is discarded when possible; previous destination remains intact |
+| S-04 | fsync fails before rename | Do not replace the destination |
+| S-05 | Rename fails | Return an error and preserve the previous destination |
+| S-06 | Process is interrupted before rename | Previous destination remains valid; orphaned temporary file may be cleaned up later |
+| S-07 | Save to a directory without permission | Return an error without truncating the previous file |
 
-## Critérios de aprovação
+## Pass criteria
 
-- Todos os testes positivos são aceitos e todos os negativos são rejeitados.
-- O round-trip P-03 deve ser byte a byte idêntico para a fixture canônica.
-- Erros de leitura nunca podem resultar em acesso fora dos limites ou alocação não limitada.
-- Em falhas de gravação anteriores ao rename, o arquivo anterior deve permanecer intacto.
-- Os testes automatizados do leitor e gravador devem ser implementados em C++ junto ao backend. A fixture hexadecimal serve como vetor de referência independente da implementação.
-
+- All positive tests are accepted and all negative tests are rejected.
+- Round-trip P-03 must be byte-for-byte identical for the canonical fixture.
+- Read errors must never cause out-of-bounds access or unbounded allocation.
+- On save failures before rename, the previous file must remain intact.
+- Automated reader/writer tests must be implemented in C++ alongside the backend. The hexadecimal fixture serves as an implementation-independent reference vector.
